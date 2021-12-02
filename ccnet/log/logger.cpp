@@ -1,18 +1,37 @@
 #include "log.h"
 
 namespace ccnet {
+
+const char* LogLevel::ToString(LogLevel::Level level) 
+{
+    switch(level) {
+    case LogLevel::DEBUG:
+        return "DEBUG";
+    case LogLevel::INFO:
+        return "INFO";
+    case LogLevel::WARN:
+        return "WARN";
+    case LogLevel::ERROR:
+        return "ERROR";
+    case LogLevel::FATAL:
+        return "FATAL";
+    default:
+        return "UNKNOW";          
+    }
+}
+
 Logger::Logger(const std::string& name)
     : m_name(name) 
 {
 
 }
 
-
+// 输出到每个appender
 void Logger::log(LogLevel::Level level, LogEvent::ptr event) 
 {
     if (level >= m_level) {
         for (const auto & ap : m_appenders) {
-            ap->log(level, event);
+            ap->log(std::shared_ptr<Logger>(this), level, event);
         }
     }
 }
