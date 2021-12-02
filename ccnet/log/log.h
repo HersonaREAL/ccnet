@@ -20,7 +20,8 @@ class Logger;
 class LogEvent {
 public:
 	using ptr = std::shared_ptr<LogEvent>;
-	LogEvent();
+	LogEvent(const char *fileName, int32_t line, uint32_t elapse, 
+				uint32_t threadId, uint32_t fiberId, uint64_t time);
 
 	const char *getFile() const { return m_file; } 
 	int32_t getLine() const { return m_line; }
@@ -28,7 +29,8 @@ public:
 	uint32_t getThreadId() const { return m_threadId; }
 	uint32_t getFiberId() const { return m_fiberId; }
 	uint64_t getTime() const { return m_time; }
-	const std::string& getContent() const { return m_content; }
+	std::string getContent() const { return m_ss.str(); }
+	std::stringstream &getSs() { return m_ss; }
 private:
 	const char* m_file = nullptr; 	//file name
 	int32_t m_line = 0;           	//行号
@@ -36,7 +38,7 @@ private:
 	uint32_t m_threadId = 0;	  	// thread id
 	uint32_t m_fiberId = 0;	       	// 协程ID
 	uint64_t m_time;			  	//时间戳	
-	std::string m_content;		  
+	std::stringstream m_ss;		  
 };
 
 class LogLevel {
@@ -90,8 +92,9 @@ protected:
 };
 
 // 日志器
-class Logger {
+class Logger : public std::enable_shared_from_this<Logger>{
 public:
+	using ptr = std::shared_ptr<Logger>;
 	Logger(const std::string& name = "root");
 	void log(LogLevel::Level level, LogEvent::ptr event);
 
@@ -112,6 +115,7 @@ private:
 	std::string m_name;				//日志名称
 	LogLevel::Level m_level;		//日志级别
 	std::list<LogAppender::ptr> m_appenders;//Appender集合
+	LogFormatter::ptr m_formater;   //默认formater
 };
 
 
