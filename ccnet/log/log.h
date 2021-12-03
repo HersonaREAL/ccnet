@@ -66,7 +66,7 @@ public:
 	class FormatItem {
 	public:
 		using ptr = std::shared_ptr<FormatItem>;
-		FormatItem (const std::string &fmt = "");
+		FormatItem (const std::string &fmt = "") {};
 		virtual ~FormatItem() {}	
 		virtual void format(std::ostream &os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr ev) = 0;
 	};

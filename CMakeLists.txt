@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.4)
+
+project(ccnet VERSION 1.0
+              LANGUAGES CXX)
+
+# c++11
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+set(LIB_SRC
+    ccnet/log/logAppender.cpp
+    ccnet/log/logFormatter.cpp
+    ccnet/log/logger.cpp
+)
+
+add_library(ccnet SHARED ${LIB_SRC})
+
+add_executable(logtest tests/logtest.cpp)
+add_dependencies(logtest ccnet)
+target_link_libraries(logtest PUBLIC ccnet)
+
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+SET(LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
