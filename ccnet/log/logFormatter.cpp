@@ -11,6 +11,14 @@
 
 
 namespace ccnet {
+class TabFormatItem : public LogFormatter::FormatItem {
+public:
+    TabFormatItem(const std::string str) {}
+    void format(std::ostream &os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr ev) override {
+        os << '\t';
+    }
+};
+
 
 class StringFormatItem : public LogFormatter::FormatItem {
 public:
@@ -239,9 +247,13 @@ void LogFormatter::init()
         def_item(d, DateTimeFormatItem)
         def_item(f, FileNameFormatItem)
         def_item(l, LineFormatItem)
+        def_item(T, TabFormatItem)
+        def_item(F, FiberIdFormatItem)
 #undef def_item
     };
     /* 
+    %T 换行
+    %F 协程id
     %m 消息体
     %p level
     %r 启动后耗时

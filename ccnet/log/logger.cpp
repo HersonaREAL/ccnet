@@ -31,7 +31,7 @@ LogEvent::LogEvent(const char *fileName, int32_t line, uint32_t elapse,
 Logger::Logger(const std::string& name)
     : m_name(name), m_level(LogLevel::DEBUG) 
 {
-    m_formater.reset(new LogFormatter("%d   [%p]    <%f:%l>: %m %n"));
+    m_formater.reset(new LogFormatter("%d%T%t%T%F%T[%p] [%c]%T<%f:%l>: %m%n"));
 }
 
 // 输出到每个appender
