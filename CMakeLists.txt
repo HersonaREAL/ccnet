@@ -11,6 +11,7 @@ set(LIB_SRC
     ccnet/log/logAppender.cpp
     ccnet/log/logFormatter.cpp
     ccnet/log/logger.cpp
+    ccnet/utils/utils.cpp
 )
 
 add_library(ccnet SHARED ${LIB_SRC})
