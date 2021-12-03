@@ -13,6 +13,12 @@ int main(int argc, char *argv[]) {
     ev->getSs() << "test log";
     logger->log(LogLevel::DEBUG, ev);
 
+    CCNET_LOG_DEBUG(logger) << "test macro!!!!!!!!!!!!!!!" << 1 << "abc";
+    CCNET_LOG_INFO(logger) << "test macro1!!!!!!!!!!!!!!!" << 2 << "def";
+    CCNET_LOG_WARN(logger) << "test macro2!!!!!!!!!!!!!!!" << 3 << "ghi";
+    CCNET_LOG_ERROR(logger) << "test macro3!!!!!!!!!!!!!!!"<< 4 << "jkl";
+    CCNET_LOG_FATAL(logger) << "test macro4!!!!!!!!!!!!!!!"<< 5 << "www";
+
     std::cout << "oh hi?" << std::endl;
     return 0;
 }

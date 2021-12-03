@@ -28,10 +28,13 @@ LogEvent::LogEvent(const char *fileName, int32_t line, uint32_t elapse,
 
 }
 
-Logger::Logger(const std::string& name)
+Logger::Logger(const std::string& name, const std::string& fmt)
     : m_name(name), m_level(LogLevel::DEBUG) 
 {
-    m_formater.reset(new LogFormatter("%d%T%t%T%F%T[%p] [%c]%T<%f:%l>: %m%n"));
+    if (fmt.empty())
+        m_formater.reset(new LogFormatter("%d%T%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n"));
+    else
+        m_formater.reset(new LogFormatter(fmt));
 }
 
 // 输出到每个appender

@@ -11,6 +11,20 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include "../utils/utils.h"
+
+#define CCNET_LOG_LEVEL(logger, level) \
+		if (logger->getLevel() <= level) \
+		ccnet::LogWrap(logger, level,  \
+		std::make_shared<ccnet::LogEvent>(__FILE__, __LINE__,  0, \
+										ccnet::getThreadId(), \
+										ccnet::getFiberId(), time(NULL))).getSs()
+
+#define CCNET_LOG_DEBUG(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::DEBUG)
+#define CCNET_LOG_INFO(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::INFO)
+#define CCNET_LOG_WARN(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::WARN)
+#define CCNET_LOG_ERROR(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::ERROR)
+#define CCNET_LOG_FATAL(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::FATAL)
 
 namespace ccnet {
 
@@ -55,6 +69,7 @@ public:
 	static const char* ToString(LogLevel::Level level);
 };
 
+
 // 格式器
 class LogFormatter {
 public:
@@ -95,7 +110,7 @@ protected:
 class Logger : public std::enable_shared_from_this<Logger>{
 public:
 	using ptr = std::shared_ptr<Logger>;
-	Logger(const std::string& name = "root");
+	Logger(const std::string& name = "root", const std::string& fmt = "");
 	void log(LogLevel::Level level, LogEvent::ptr event);
 
 	// log类型输出
@@ -116,6 +131,21 @@ private:
 	LogLevel::Level m_level;		//日志级别
 	std::list<LogAppender::ptr> m_appenders;//Appender集合
 	LogFormatter::ptr m_formater;   //默认formater
+};
+
+// wrap, 用于宏的raii
+class LogWrap {
+public:
+	LogWrap(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
+		: m_event(event), m_logger(logger) ,
+		  m_level(level)
+		  {}	
+	std::stringstream &getSs() { return m_event->getSs(); }
+	~LogWrap() { m_logger->log(m_level, m_event); }
+private:
+	LogEvent::ptr m_event;
+	Logger::ptr m_logger;
+	LogLevel::Level m_level;
 };
 
 
