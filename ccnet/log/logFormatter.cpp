@@ -1,5 +1,6 @@
 #include "log.h"
 #include <cstddef>
+#include <ctime>
 #include <memory>
 #include <sstream>
 #include <tuple>
@@ -81,10 +82,21 @@ public:
 
 class DateTimeFormatItem : public LogFormatter::FormatItem {
 public:
-    DateTimeFormatItem(const std::string& format = "%Y:%m:%d %H%M:%s")
-        : m_format(format) {}
+    DateTimeFormatItem(const std::string& format = "%Y-%m-%d %H:%M:%S")
+        : m_format(format) 
+    { 
+        if (m_format.empty()) {
+            m_format = "%Y-%m-%d %H:%M:%S";
+        }
+    }
+
     void format(std::ostream &os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr ev) override {
-        os << ev->getTime();
+        struct tm t;
+        char buf[128];
+        time_t time = ev->getTime();
+        localtime_r(&time, &t);
+        strftime(buf, sizeof(buf), m_format.c_str(), &t);
+        os << buf;
     }
 private:
     std::string m_format;
@@ -109,7 +121,7 @@ public:
 LogFormatter::LogFormatter(const std::string &pattern) 
     : m_pattern(pattern) 
 {
-
+    init();
 }
 
 std::string LogFormatter::format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
@@ -134,64 +146,81 @@ void LogFormatter::init()
             continue;
         }  
 
+        int status = 0;
+        std::string str;
         if ((i + 1) < m_pattern.size()) {
             if (m_pattern[i + 1] == '%') {
                 nstr.append(1, '%');
                 continue;
             }
+            str.push_back(m_pattern[i + 1]);
+            status = 1;
+        } 
+
+        if (!nstr.empty()) {
+            vec.push_back(std::make_tuple(nstr, "", 0));
+            nstr.clear();
+        }
+        
+        if (status == 1) {
+            vec.push_back(std::make_tuple(str, "", 1));
+            i++;
         }
 
-        size_t n = i + 1;
-        int fmt_status = 0;
-        size_t fmt_begin = 0;
 
-        std::string str;
-        std::string fmt;
 
-        while (n < m_pattern.size()) {
-            if (isspace(m_pattern[n])) {
-                break;
-            }
 
-            if (fmt_status == 0) {
-                if (m_pattern[n] == '{') {
-                    str = m_pattern.substr(i + 1, n - i - 1);
-                    fmt_status = 1; // 解析格式
-                    fmt_begin = n;
-                    ++n;
-                    continue;
-                }
-            }
+        // size_t n = i + 1;
+        // int fmt_status = 0;
+        // size_t fmt_begin = 0;
 
-            if (fmt_status == 1) {
-                if (m_pattern[n] == '}') {
-                    //截取{xxx}格式串到Fmt
-                    fmt = m_pattern.substr(fmt_begin + 1, n - fmt_begin - 1);
-                    fmt_status = 2;
-                    break;
-                }
-            }
+        // std::string str;
+        // std::string fmt;
 
-            
-            
-        }
-        if (fmt_status == 0) {
-            if (!nstr.empty()) {
-                vec.push_back(std::make_tuple(nstr, "", 0));
-            }
-            str = m_pattern.substr(i + 1, n - i - 1);
-            vec.push_back(std::make_tuple(str, fmt, 1));
-            i = n;
-        } else if (fmt_status == 1) {
-            std::cout << "pattern parse error: " << m_pattern << " - " << m_pattern.substr(i) << std::endl;
-            vec.push_back(std::make_tuple("<<parse error>>", fmt, 1));
-        } else if (fmt_status == 2) {
-            if (!nstr.empty()) {
-                vec.push_back(std::make_tuple(nstr, "", 0));
-            }
-            vec.push_back(std::make_tuple(str, fmt, 1));
-            i = n;
-        }
+        // while (n < m_pattern.size()) {
+        //     if (isspace(m_pattern[n])) {
+        //         break;
+        //     }
+
+        //     if (fmt_status == 0) {
+        //         if (m_pattern[n] == '{') {
+        //             str = m_pattern.substr(i + 1, n - i - 1);
+        //             fmt_status = 1; // 解析格式
+        //             fmt_begin = n;
+        //             ++n;
+        //             continue;
+        //         }
+        //     }
+
+        //     if (fmt_status == 1) {
+        //         if (m_pattern[n] == '}') {
+        //             //截取{xxx}格式串到Fmt
+        //             fmt = m_pattern.substr(fmt_begin + 1, n - fmt_begin - 1);
+        //             fmt_status = 2;
+        //             break;
+        //         }
+        //     }
+        //     ++n;
+        // }
+        // if (fmt_status == 0) {
+        //     if (!nstr.empty()) {
+        //         vec.push_back(std::make_tuple(nstr, "", 0));
+        //         nstr.clear();
+        //     }
+        //     str = m_pattern.substr(i + 1, n - i - 1);
+        //     vec.push_back(std::make_tuple(str, fmt, 1));
+        //     i = n;
+        // } else if (fmt_status == 1) {
+        //     std::cout << "pattern parse error: " << m_pattern << " - " << m_pattern.substr(i) << std::endl;
+        //     vec.push_back(std::make_tuple("<<parse error>>", fmt, 1));
+        // } else if (fmt_status == 2) {
+        //     if (!nstr.empty()) {
+        //         vec.push_back(std::make_tuple(nstr, "", 0));
+        //         nstr.clear();
+        //     }
+        //     vec.push_back(std::make_tuple(str, fmt, 1));
+        //     i = n;
+        // }
     }
 
     if (!nstr.empty()) {
@@ -239,7 +268,7 @@ void LogFormatter::init()
             }
         }
 
-        std::cout << std::get<0>(i) << ", " << std::get<1>(i) <<", " << std::get<2>(i) << std::endl;
+        std::cout << "(" << std::get<0>(i) << "), (" << std::get<1>(i) <<"), (" << std::get<2>(i) << ")" <<std::endl;
     }
 
 }
