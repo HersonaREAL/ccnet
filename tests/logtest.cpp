@@ -36,6 +36,9 @@ int main(int argc, char *argv[]) {
     CCNET_LOG_FMT_FATAL(logger, "test fmt fatal,%d,%s,%c", 555, "fatal", 'f');   
     // CCNET_LOG_FMT_LEVEL(logger, LogLevel::DEBUG, "test fmt level");
 
+    auto lg = LogMgr::Instance()->getLogger("test");
+    CCNET_LOG_DEBUG(lg) << "test mgr";
+    CCNET_LOG_FMT_INFO(lg, "shit mgr%d", 6666);
     std::cout << "oh hi?" << std::endl;
     return 0;
 }

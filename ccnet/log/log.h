@@ -5,6 +5,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <ostream>
+#include <unordered_map>
 #include <vector>
 #include <string>
 #include <list>
@@ -196,5 +197,30 @@ private:
 	std::string m_filename;
 	std::ofstream m_filestream;
 };
+
+
+class LogManager
+{
+public:
+	friend class Singleton<LogManager>;
+	Logger::ptr getLogger(const std::string &name) {
+		auto it = m_loggerMap.find(name);
+		return it == m_loggerMap.end() ? m_root : it->second;
+	}
+
+private:
+	LogManager() 
+	{ 
+		m_root.reset(new Logger()); 
+		m_root->addAppender(StdoutLogAppender::ptr(new StdoutLogAppender())); 
+	}
+private:
+	Logger::ptr m_root;
+	std::unordered_map<std::string, Logger::ptr> m_loggerMap;
+};
+
+
+using LogMgr = Singleton<LogManager>;
+
 
 }
