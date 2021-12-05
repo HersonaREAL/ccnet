@@ -3,12 +3,13 @@
 namespace ccnet {
 
 FileLogAppender::FileLogAppender(const std::string &filename) 
-    : m_filename(filename){
-
+    : m_filename(filename)
+{
+    reopen();
 }
 
 void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event){
-    if (level >= m_level) {
+    if (level >= m_level && m_filestream) {
         m_filestream << m_formatter->format(logger, level, event);
     }
 }

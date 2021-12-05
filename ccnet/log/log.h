@@ -2,6 +2,8 @@
 
 #include <fstream>
 #include <bits/stdint-uintn.h>
+#include <cstdarg>
+#include <cstdio>
 #include <ostream>
 #include <vector>
 #include <string>
@@ -15,10 +17,10 @@
 
 #define CCNET_LOG_LEVEL(logger, level) \
 		if (logger->getLevel() <= level) \
-		ccnet::LogWrap(logger, level,  \
-		std::make_shared<ccnet::LogEvent>(__FILE__, __LINE__,  0, \
-										ccnet::getThreadId(), \
-										ccnet::getFiberId(), time(NULL))).getSs()
+			ccnet::LogWrap(logger, level,  \
+				std::make_shared<ccnet::LogEvent>(__FILE__, __LINE__,  0, \
+											ccnet::getThreadId(), \
+											ccnet::getFiberId(), time(NULL))).getSs()
 
 #define CCNET_LOG_DEBUG(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::DEBUG)
 #define CCNET_LOG_INFO(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::INFO)
@@ -26,6 +28,18 @@
 #define CCNET_LOG_ERROR(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::ERROR)
 #define CCNET_LOG_FATAL(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::FATAL)
 
+#define CCNET_LOG_FMT_LEVEL(logger, level, fmt, ...) \
+		if (logger->getLevel() <= level) \
+			ccnet::LogWrap(logger, level, \
+				std::make_shared<ccnet::LogEvent>(__FILE__, __LINE__, 0, \
+											ccnet::getThreadId(), \
+											ccnet::getFiberId(), time(NULL))).format(fmt,##__VA_ARGS__)
+
+#define CCNET_LOG_FMT_DEBUG(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::DEBUG, fmt, ##__VA_ARGS__)
+#define CCNET_LOG_FMT_INFO(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::INFO, fmt, ##__VA_ARGS__)
+#define CCNET_LOG_FMT_WARN(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::WARN, fmt, ##__VA_ARGS__)
+#define CCNET_LOG_FMT_ERROR(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::ERROR, fmt, ##__VA_ARGS__)
+#define CCNET_LOG_FMT_FATAL(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::FATAL, fmt, ##__VA_ARGS__)
 namespace ccnet {
 
 class Logger;
@@ -101,6 +115,8 @@ public:
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 	void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
 	LogFormatter::ptr getFormatter() const { return m_formatter; }
+	void setLevel(LogLevel::Level level) { m_level = level; }
+	LogLevel::Level getLevel() const { return m_level; }
 protected:
 	LogLevel::Level m_level = LogLevel::DEBUG;
 	LogFormatter::ptr m_formatter;
@@ -141,8 +157,21 @@ public:
 		  m_level(level)
 		  {}	
 	std::stringstream &getSs() { return m_event->getSs(); }
+	void format(const char *fmt, ...)
+	{
+		char *buf;
+		std::va_list args;
+		va_start(args, fmt);
+		int len = vasprintf(&buf, fmt, args);
+		if (len != -1) {
+			m_event->getSs() << std::string(buf, len);
+			free(buf);
+		}
+		va_end(args);
+	}  
 	~LogWrap() { m_logger->log(m_level, m_event); }
 private:
+	LogWrap();
 	LogEvent::ptr m_event;
 	Logger::ptr m_logger;
 	LogLevel::Level m_level;
