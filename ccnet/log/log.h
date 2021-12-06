@@ -41,6 +41,21 @@
 #define CCNET_LOG_FMT_WARN(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::WARN, fmt, ##__VA_ARGS__)
 #define CCNET_LOG_FMT_ERROR(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::ERROR, fmt, ##__VA_ARGS__)
 #define CCNET_LOG_FMT_FATAL(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::FATAL, fmt, ##__VA_ARGS__)
+
+//for root log
+#define CCNET_LOG_ROOT() ccnet::LogMgr::Instance()->getRoot()
+#define LOG_DEBUG() CCNET_LOG_DEBUG(CCNET_LOG_ROOT())
+#define LOG_INFO() CCNET_LOG_INFO(CCNET_LOG_ROOT())
+#define LOG_WARN() CCNET_LOG_WARN(CCNET_LOG_ROOT())
+#define LOG_ERROR() CCNET_LOG_ERROR(CCNET_LOG_ROOT())
+#define LOG_FATAL() CCNET_LOG_FATAL(CCNET_LOG_ROOT())
+#define LOG_FMT_DEBUG(fmt, ...) CCNET_LOG_FMT_DEBUG(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
+#define LOG_FMT_INFO(fmt, ...) CCNET_LOG_FMT_INFO(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
+#define LOG_FMT_WARN(fmt, ...) CCNET_LOG_FMT_WARN(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
+#define LOG_FMT_ERROR(fmt, ...) CCNET_LOG_FMT_ERROR(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
+#define LOG_FMT_FATAL(fmt, ...) CCNET_LOG_FMT_FATAL(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
+
+
 namespace ccnet {
 
 class Logger;
@@ -207,6 +222,7 @@ public:
 		auto it = m_loggerMap.find(name);
 		return it == m_loggerMap.end() ? m_root : it->second;
 	}
+	Logger::ptr getRoot() const { return m_root; }
 
 private:
 	LogManager() 

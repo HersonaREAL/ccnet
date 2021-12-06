@@ -39,6 +39,24 @@ int main(int argc, char *argv[]) {
     auto lg = LogMgr::Instance()->getLogger("test");
     CCNET_LOG_DEBUG(lg) << "test mgr";
     CCNET_LOG_FMT_INFO(lg, "shit mgr%d", 6666);
+
+    CCNET_LOG_ERROR(CCNET_LOG_ROOT()) << "test ccnet log root";
+    LOG_DEBUG() << "test root log debug";
+    LOG_ERROR() << "error";
+    LOG_FATAL() << "fatal";
+    LOG_INFO() << "info";
+    LOG_WARN() << "warn";
+
+    LOG_FMT_DEBUG("test fmt debug");
+    LOG_FMT_INFO("test fmt debug"); 
+    LOG_FMT_WARN("test fmt debug");
+    LOG_FMT_ERROR("test fmt debug");
+    LOG_FMT_FATAL("test fmt debug");
+    LOG_FMT_DEBUG("test fmt debug%d",666);
+    LOG_FMT_INFO("test fmt debug%d",666); 
+    LOG_FMT_WARN("test fmt debug%d",666);  
+    LOG_FMT_ERROR("test fmt debug%d",666);   
+    LOG_FMT_FATAL("test fmt debug%d",666);
     std::cout << "oh hi?" << std::endl;
     return 0;
 }
