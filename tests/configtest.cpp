@@ -1,5 +1,5 @@
-#include "../ccnet/log/log.h"
-#include "../ccnet/config/config.h"
+#include <log.h>
+#include <config.h>
 
 using namespace ccnet;
 

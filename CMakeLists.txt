@@ -6,6 +6,9 @@ project(ccnet VERSION 1.0
 # c++11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILECOMMANDS ON)
+
+include_directories(ccnet/include)
 
 set(LIB_SRC
     ccnet/log/logAppender.cpp

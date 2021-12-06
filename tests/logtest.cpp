@@ -1,7 +1,7 @@
 #include <iostream>
 #include <thread>
-#include "../ccnet/log/log.h"
-#include "../ccnet/utils/utils.h"
+#include <log.h>
+#include <utils.h>
 
 
 using namespace ccnet;
