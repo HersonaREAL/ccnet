@@ -1,11 +1,15 @@
 #pragma once
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
-#include "../log/log.h"
+#include <log.h>
+#include <yaml-cpp/node/node.h>
+#include <yaml-cpp/node/parse.h>
+#include <yaml-cpp/yaml.h>
 
 namespace ccnet {
 
@@ -15,7 +19,10 @@ public:
     using ptr = std::shared_ptr<ConfigVarBase>;
     ConfigVarBase(const std::string &name, const std::string& description = "")
         : m_name(name) ,
-          m_description(description) {}
+          m_description(description) 
+    {
+        std::transform(m_name.begin(), m_name.end(), m_name.begin(), [](char c) { return std::tolower(c); });
+    }
     virtual ~ConfigVarBase() {}
 
     const std::string& getName() const { return m_name; }
@@ -85,7 +92,7 @@ public:
         }
 
         //限定字符
-        if (name.find_first_not_of("qwertyuiopasdfghjklzxcvbnm._0123456789QWERTYUIOPASDFGHJKLZXCVBNM") != std::string::npos) {
+        if (name.find_first_not_of("qwertyuiopasdfghjklzxcvbnm._0123456789") != std::string::npos) {
             LOG_ERROR() << "look up name invail";
             throw std::invalid_argument(name);
         }
@@ -100,6 +107,13 @@ public:
         auto it = s_datas.find(name);
         return it == s_datas.end() ? nullptr : std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
+
+    static ConfigVarBase::ptr lookupBase(const std::string &name) {
+        auto it = s_datas.find(name);
+        return it == s_datas.end() ? nullptr : it->second;
+    }
+
+    static void loadFromYAML(const YAML::Node &node);
 private:
     static ConfigVarMap s_datas;
 };

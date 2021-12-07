@@ -19,6 +19,7 @@ set(LIB_SRC
 )
 
 add_library(ccnet SHARED ${LIB_SRC})
+target_link_libraries(ccnet PUBLIC yaml-cpp)
 
 add_executable(logtest tests/logtest.cpp)
 add_dependencies(logtest ccnet)
@@ -28,6 +29,7 @@ target_link_libraries(logtest PUBLIC ccnet)
 add_executable(configtest tests/configtest.cpp)
 add_dependencies(configtest ccnet)
 target_link_libraries(configtest PUBLIC ccnet)
+target_link_libraries(configtest PUBLIC yaml-cpp)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)

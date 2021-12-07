@@ -1,0 +1,17 @@
+logs:
+    - name: root
+      level: info
+      formatter: "%d%T%m%n"
+      appender:
+          - type: FileLogAppender
+            path: log.txt
+          - type: StdoutLogAppender
+    - name: system
+      level: debug
+      formatter: "%d%T%m%n"
+      appender:
+          - type: FileLogAppender
+            path: debuglog.txt
+          - type: StdoutLogAppender
+system:
+    port: 6789
