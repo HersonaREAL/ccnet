@@ -16,3 +16,12 @@ logs:
 system:
     port: 6789
     vec: [7,8,9,10,11,12]
+    list: 
+      - 11
+      - 77
+      - 99
+      - 4567
+    intset: [20,20,30,30,44]
+    intuset: [20,20,31,30,44]
+    strset: ["abc", "efg"]
+    struset: ["ggg", "kkkk"]

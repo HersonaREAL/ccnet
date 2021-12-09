@@ -4,6 +4,12 @@
 #include <exception>
 #include <memory>
 #include <sstream>
+#include <vector>
+#include <list>
+#include <set>
+#include <unordered_set>
+#include <map>
+#include <unordered_map>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <log.h>
@@ -89,7 +95,128 @@ public:
     }
 };
 
+//偏特化list 2 str
+template<class T>
+class BaseCast<std::list<T>, std::string>
+{
+public:
+    using cast2str = BaseCast<T, std::string>;
+    std::string operator()(const std::list<T> & vals) {
+        YAML::Node node;
+        std::stringstream ss;
+        for (const T &val : vals) {
+            YAML::Node tmpNode = YAML::Load(cast2str()(val));
+            node.push_back(tmpNode);
+        }
+        ss << node;
+        return ss.str();
+    }
+};
 
+//偏特化str 2 list 
+template<class T>
+class BaseCast<std::string, std::list<T>>
+{
+public:
+    using cast2Var = BaseCast<std::string, T>;
+    std::list<T> operator()(const std::string &str) {
+        YAML::Node node = YAML::Load(str);
+        size_t sz = node.size();
+        typename std::list<T> res;
+
+        assert(node.IsSequence());
+
+        std::stringstream ss;
+        for (int i = 0; i < sz; i++) {
+            ss.str("");
+            ss << node[i];
+            res.push_back(cast2Var()(ss.str()));
+        }
+        return res;
+    }
+};
+
+//偏特化set 2 str
+template<class T>
+class BaseCast<std::set<T>, std::string>
+{
+public:
+    using cast2str = BaseCast<T, std::string>;
+    std::string operator()(const std::set<T> & vals) {
+        YAML::Node node;
+        std::stringstream ss;
+        for (const T &val : vals) {
+            YAML::Node tmpNode = YAML::Load(cast2str()(val));
+            node.push_back(tmpNode);
+        }
+        ss << node;
+        return ss.str();
+    }
+};
+
+//偏特化str 2 set
+template<class T>
+class BaseCast<std::string, std::set<T>>
+{
+public:
+    using cast2Var = BaseCast<std::string, T>;
+    std::set<T> operator()(const std::string &str) {
+        YAML::Node node = YAML::Load(str);
+        size_t sz = node.size();
+        typename std::set<T> res;
+
+        assert(node.IsSequence());
+
+        std::stringstream ss;
+        for (int i = 0; i < sz; i++) {
+            ss.str("");
+            ss << node[i];
+            res.insert(cast2Var()(ss.str()));
+        }
+        return res;
+    }
+};
+
+//偏特化uset 2 str
+template<class T>
+class BaseCast<std::unordered_set<T>, std::string>
+{
+public:
+    using cast2str = BaseCast<T, std::string>;
+    std::string operator()(const std::unordered_set<T> & vals) {
+        YAML::Node node;
+        std::stringstream ss;
+        for (const T &val : vals) {
+            YAML::Node tmpNode = YAML::Load(cast2str()(val));
+            node.push_back(tmpNode);
+        }
+        ss << node;
+        return ss.str();
+    }
+};
+
+//偏特化str 2 uset
+template<class T>
+class BaseCast<std::string, std::unordered_set<T>>
+{
+public:
+    using cast2Var = BaseCast<std::string, T>;
+    std::unordered_set<T> operator()(const std::string &str) {
+        YAML::Node node = YAML::Load(str);
+        size_t sz = node.size();
+        typename std::unordered_set<T> res;
+
+        assert(node.IsSequence());
+
+        std::stringstream ss;
+        for (int i = 0; i < sz; i++) {
+            ss.str("");
+            ss << node[i];
+            res.insert(cast2Var()(ss.str()));
+        }
+        return res;
+    }
+};
 
 // 支持复杂类型转str以及str转复杂类型
 template<class T, class Cast2Str = BaseCast<T, std::string>, 
