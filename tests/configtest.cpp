@@ -7,6 +7,7 @@
 using namespace ccnet;
 
 ConfigVar<int>::ptr int_val = Config::lookup("system.port", 8080, "system port");
+ConfigVar<std::vector<int>>::ptr int_vec = Config::lookup("system.vec", std::vector<int>{1, 2, 3, 4}, "system vec");
 
 void print_yaml(const YAML::Node &node, int level) {
     if (node.IsScalar()) {
@@ -39,11 +40,23 @@ void test_cfg() {
     LOG_INFO() << "-----------before-----------";
     LOG_INFO() << int_val->getVal();
     LOG_INFO() << int_val->toString();
+    
+    //test vec
+    const auto& vec = int_vec->getVal();
+    LOG_INFO() << "vec: ";
+    for (auto i : vec)
+        LOG_INFO() << i;
+
     LOG_INFO() << "-----------after-----------";
     YAML::Node root = YAML::LoadFile("/home/cc/ccnet/bin/conf/log.yml");
     Config::loadFromYAML(root);
     LOG_INFO() << int_val->getVal();
     LOG_INFO() << int_val->toString();
+
+    //test vec
+    LOG_INFO() << "vec: ";
+     for (auto i : vec)
+        LOG_INFO() << i;   
 }
 
 

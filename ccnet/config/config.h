@@ -36,7 +36,64 @@ protected:
     std::string m_description;
 };
 
+
+
+template<class From, class To>
+class BaseCast
+{
+public:
+    To operator()(const From & v) {
+        return boost::lexical_cast<To>(v);
+    }
+};
+
+
+//偏特化vector 2 str
 template<class T>
+class BaseCast<std::vector<T>, std::string>
+{
+public:
+    using cast2str = BaseCast<T, std::string>;
+    std::string operator()(const std::vector<T> & vals) {
+        YAML::Node node;
+        std::stringstream ss;
+        for (const T &val : vals) {
+            YAML::Node tmpNode = YAML::Load(cast2str()(val));
+            node.push_back(tmpNode);
+        }
+        ss << node;
+        return ss.str();
+    }
+};
+
+//偏特化str 2 vec
+template<class T>
+class BaseCast<std::string, std::vector<T>>
+{
+public:
+    using cast2Var = BaseCast<std::string, T>;
+    std::vector<T> operator()(const std::string &str) {
+        YAML::Node node = YAML::Load(str);
+        size_t sz = node.size();
+        typename std::vector<T> res;
+
+        assert(node.IsSequence());
+
+        std::stringstream ss;
+        for (int i = 0; i < sz; i++) {
+            ss.str("");
+            ss << node[i];
+            res.push_back(cast2Var()(ss.str()));
+        }
+        return res;
+    }
+};
+
+
+
+// 支持复杂类型转str以及str转复杂类型
+template<class T, class Cast2Str = BaseCast<T, std::string>, 
+                  class Cast2Var = BaseCast<std::string, T>>
 class ConfigVar : public ConfigVarBase
 {
 public:
@@ -48,7 +105,7 @@ public:
 
     std::string toString() override {
         try {
-            return boost::lexical_cast<std::string>(m_val);
+            return Cast2Str()(m_val);
         } catch(std::exception &e) {
             LOG_ERROR() << "ConfigVar::toString exception"
             << e.what() << "convert: " << typeid(m_val).name() << "to string";
@@ -59,7 +116,7 @@ public:
 
     bool fromString(const std::string &val) override {
         try {
-            m_val = boost::lexical_cast<T>(val);
+            m_val = Cast2Var()(val);
         } catch (std::exception &e) {
             LOG_ERROR() << "ConfigVar::fromString exception"
             << e.what() << "convert: " << "string to " << typeid(m_val).name();
@@ -74,6 +131,7 @@ public:
 private:
     T m_val;
 };
+
 
 
 class Config 
