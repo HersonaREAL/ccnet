@@ -218,6 +218,69 @@ public:
     }
 };
 
+//偏特化umap 2 str
+template<class T>
+class BaseCast<std::unordered_map<std::string, T>, std::string>
+{
+public:
+    using cast2str = BaseCast<T, std::string>;
+    std::string operator()(const std::unordered_map<std::string, T> & vals) {
+        YAML::Node node;
+        std::stringstream ss;
+        for (const auto &val : vals) {
+            node.push_back(std::make_pair(val.first, cast2str()(val.second)));
+        }
+        ss << node;
+        return ss.str();
+    }
+};
+
+//偏特化str 2 umap 
+template<class T>
+class BaseCast<std::string, std::unordered_set<std::string, T>>
+{
+public:
+    using cast2Var = BaseCast<std::string, T>;
+    std::unordered_map<std::string, T> operator()(const std::string &str) {
+        YAML::Node node = YAML::Load(str);
+        typename std::unordered_map<std::string, T> res;
+        assert(node.IsMap());
+
+        std::stringstream kss;
+        std::stringstream vss;
+        for (const auto& p : node) {
+            kss.str("");
+            vss.str("");
+            kss << p.first;
+            vss << p.second;
+            res[kss.str()] = cast2Var()(vss.str());
+        }
+        return res;
+    }
+};
+
+//偏特化umap 2 str
+// template<class T>
+// class BaseCast<std::map<std::string, T>, std::string>
+// {
+// public:
+//     using cast2str = BaseCast<T, std::string>;
+//     std::string operator()(const std::map<std::string, T> & vals) {
+
+//     }
+// };
+
+// //偏特化str 2 umap
+// template<class T>
+// class BaseCast<std::string, std::map<std::string, T>>
+// {
+// public:
+//     using cast2Var = BaseCast<std::string, T>;
+//     std::map<std::string, T> operator()(const std::string &str) {
+
+//     }
+// };
+
 // 支持复杂类型转str以及str转复杂类型
 template<class T, class Cast2Str = BaseCast<T, std::string>, 
                   class Cast2Var = BaseCast<std::string, T>>

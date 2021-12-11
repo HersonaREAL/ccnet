@@ -13,6 +13,7 @@ ConfigVar<std::set<int>>::ptr int_set = Config::lookup("system.intset", std::set
 ConfigVar<std::unordered_set<int>>::ptr int_uset = Config::lookup("system.intuset", std::unordered_set<int>{20,21,33,44}, "system int uset");
 ConfigVar<std::set<std::string>>::ptr str_set = Config::lookup("system.strset", std::set<std::string>{"20t","21t","33t","ttt44"}, "system str set");
 ConfigVar<std::unordered_set<std::string>>::ptr str_uset = Config::lookup("system.struset", std::unordered_set<std::string>{"2a0","2f1","3f3","4ss4"}, "system str uset");
+ConfigVar<std::unordered_map<std::string, int>>::ptr int_umap = Config::lookup("system.intumap", std::unordered_map<std::string, int>{{"test1", 1}, {"test2", 2}, {"aaaa",6}}, "system int umap");
 
 
 void print_yaml(const YAML::Node &node, int level) {
