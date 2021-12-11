@@ -25,3 +25,12 @@ system:
     intuset: [20,20,31,30,44]
     strset: ["abc", "efg"]
     struset: ["ggg", "kkkk"]
+    intumap:
+        test1: 88
+        test2: 777
+    intmap: 
+        test1: 99
+        test2: 333
+    strumap:
+        fff : "abcdefg"
+        sdlafsldf: "sdlfjsld;fsdlf"

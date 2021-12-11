@@ -13,7 +13,9 @@ ConfigVar<std::set<int>>::ptr int_set = Config::lookup("system.intset", std::set
 ConfigVar<std::unordered_set<int>>::ptr int_uset = Config::lookup("system.intuset", std::unordered_set<int>{20,21,33,44}, "system int uset");
 ConfigVar<std::set<std::string>>::ptr str_set = Config::lookup("system.strset", std::set<std::string>{"20t","21t","33t","ttt44"}, "system str set");
 ConfigVar<std::unordered_set<std::string>>::ptr str_uset = Config::lookup("system.struset", std::unordered_set<std::string>{"2a0","2f1","3f3","4ss4"}, "system str uset");
-ConfigVar<std::unordered_map<std::string, int>>::ptr int_umap = Config::lookup("system.intumap", std::unordered_map<std::string, int>{{"test1", 1}, {"test2", 2}, {"aaaa",6}}, "system int umap");
+ConfigVar<std::unordered_map<std::string, int>>::ptr int_umap = Config::lookup("system.intumap", std::unordered_map<std::string, int>{{"test1", 1}, {"test2", 2}, {"aaaa",6}, {"test1", 33}}, "system int umap");
+ConfigVar<std::unordered_map<std::string, int>>::ptr int_map = Config::lookup("system.intmap", std::unordered_map<std::string, int>{{"test1", 1}, {"test2", 2}, {"aaaa",6}, {"test1", 33}}, "system int umap");
+ConfigVar<std::unordered_map<std::string, std::string>>::ptr str_umap = Config::lookup("system.strumap", std::unordered_map<std::string, std::string>{{"abc", "cde"}, {"fff", "0xfff"}}, "system str umap");
 
 
 void print_yaml(const YAML::Node &node, int level) {
@@ -53,6 +55,15 @@ void test_cfg() {
         LOG_INFO() << std::endl; \
     }while(0);
 
+#define TEST_MAP(val, info) \
+    do {\
+        LOG_INFO()<< #info ", " << val->getName() << ": ";\
+        const auto &v = val->getVal();\
+        for (const auto &i : v) \
+            LOG_INFO() << "{ " << i.first << ", " << i.second << " }";\
+        LOG_INFO() << std::endl;\
+    }while(0);
+
     LOG_INFO() << "-----------before-----------";
     LOG_INFO() << int_val->getVal();
     LOG_INFO() << int_val->toString();
@@ -65,6 +76,9 @@ void test_cfg() {
     TEST_SEQ(int_uset, before)
     TEST_SEQ(str_set, before)
     TEST_SEQ(str_uset, before)
+    TEST_MAP(int_umap, before)
+    TEST_MAP(int_map, before)
+    TEST_MAP(str_umap, before)
     
     YAML::Node root = YAML::LoadFile("/home/cc/ccnet/bin/conf/log.yml");
     Config::loadFromYAML(root);
@@ -81,9 +95,13 @@ void test_cfg() {
     TEST_SEQ(int_uset, after)
     TEST_SEQ(str_set, after)
     TEST_SEQ(str_uset, after)
+    TEST_MAP(int_umap, after)
+    TEST_MAP(int_map, after)
+    TEST_MAP(str_umap, after)
 
 
 #undef TEST_SEQ
+#undef TEST_MAP
 }
 
 
