@@ -42,6 +42,8 @@
 #define CCNET_LOG_FMT_ERROR(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::ERROR, fmt, ##__VA_ARGS__)
 #define CCNET_LOG_FMT_FATAL(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::FATAL, fmt, ##__VA_ARGS__)
 
+#define CCNET_LOG_NAME(name) ccnet::LogMgr::Instance()->getLogger(#name)
+
 //for root log
 #define CCNET_LOG_ROOT() ccnet::LogMgr::Instance()->getRoot()
 #define LOG_DEBUG() CCNET_LOG_DEBUG(CCNET_LOG_ROOT())
@@ -220,7 +222,10 @@ public:
 	friend class Singleton<LogManager>;
 	Logger::ptr getLogger(const std::string &name) {
 		auto it = m_loggerMap.find(name);
-		return it == m_loggerMap.end() ? m_root : it->second;
+		if (it != m_loggerMap.end()) {
+			return it->second;
+		}
+		return m_loggerMap[name] = std::make_shared<Logger>(name);
 	}
 	Logger::ptr getRoot() const { return m_root; }
 

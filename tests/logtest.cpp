@@ -57,6 +57,11 @@ int main(int argc, char *argv[]) {
     LOG_FMT_WARN("test fmt debug%d",666);  
     LOG_FMT_ERROR("test fmt debug%d",666);   
     LOG_FMT_FATAL("test fmt debug%d",666);
+
+
+    auto nameLog = CCNET_LOG_NAME("test");
+    CCNET_LOG_INFO(nameLog) << "Hi, I am name log!";
+
     std::cout << "oh hi?" << std::endl;
     return 0;
 }

@@ -44,9 +44,14 @@ void Logger::log(LogLevel::Level level, LogEvent::ptr event)
         /*为什么不使用 shared_ptr<A>(this)?
             会产生两个无关智能指针，导致this被释放两次
         */
-        auto self = shared_from_this();
-        for (const auto & ap : m_appenders) {
-            ap->log(self, level, event);
+        if (!m_appenders.empty()) { 
+            auto self = shared_from_this();
+            for (const auto & ap : m_appenders) {
+                ap->log(self, level, event);
+            }
+        } else {
+            // 没有appender默认使用root
+            CCNET_LOG_ROOT()->log(level, event);
         }
     }
 }
