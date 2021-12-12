@@ -7,6 +7,7 @@
 using namespace ccnet;
 
 ConfigVar<int>::ptr int_val = Config::lookup("system.port", 8080, "system port");
+ConfigVar<float>::ptr float_val = Config::lookup("system.port", (float)8080, "system port");
 ConfigVar<std::vector<int>>::ptr int_vec = Config::lookup("system.vec", std::vector<int>{1, 2, 3, 4}, "system vec");
 ConfigVar<std::list<int>>::ptr int_list = Config::lookup("system.list", std::list<int>{12, 23, 45}, "system list");
 ConfigVar<std::set<int>>::ptr int_set = Config::lookup("system.intset", std::set<int>{20,21,33,44}, "system int set");

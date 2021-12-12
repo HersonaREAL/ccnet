@@ -37,6 +37,7 @@ public:
     virtual std::string toString() = 0;
     // str 2 val
     virtual bool fromString(const std::string &val) = 0;
+    virtual std::string getTypeName() const = 0;
 protected:
     std::string m_name;
     std::string m_description;
@@ -334,6 +335,10 @@ public:
         return true;
     }
 
+    std::string getTypeName() const override {
+        return typeid(T).name();
+    }
+
     const T& getVal() const { return m_val; }
     void setVal(const T& val) { m_val = val; }
 
@@ -352,10 +357,19 @@ public:
     static typename ConfigVar<T>::ptr lookup(const std::string &name, 
                                              const T& default_val, const std::string& description = "") 
     {
-        auto tmp = lookup<T>(name);
-        if (tmp) {
-            LOG_ERROR() << "lookup name="<<name<< "exists";
-            return tmp;
+        auto it = s_datas.find(name);
+        if (it != s_datas.end()) {
+            auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+            if (tmp) {
+                // 存在且类型相同
+                LOG_INFO() << "lookup name = " << name << "exists";
+                return tmp;
+            } else {
+                // 存在且类型不同，报错
+                LOG_ERROR() << "lookup name = " << name << " exists, but lookup type: " << typeid(T).name() 
+                                                        << ", real type: " << it->second->getTypeName(); 
+                return nullptr;
+            }
         }
 
         //限定字符
