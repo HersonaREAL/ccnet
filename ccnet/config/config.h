@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <bits/stdint-uintn.h>
 #include <exception>
 #include <memory>
 #include <sstream>
@@ -12,6 +13,7 @@
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
+#include <functional>
 #include <log.h>
 #include <yaml-cpp/node/node.h>
 #include <yaml-cpp/node/parse.h>
@@ -308,6 +310,7 @@ class ConfigVar : public ConfigVarBase
 {
 public:
     using ptr = std::shared_ptr<ConfigVar>;
+    using cb = std::function<void(const T& old_val, const T& new_val)>;
     ConfigVar(const std::string& name, 
                 const T& default_val, 
                 const std::string description = "")
@@ -326,7 +329,8 @@ public:
 
     bool fromString(const std::string &val) override {
         try {
-            m_val = Cast2Var()(val);
+            // 触发回调
+            setVal(Cast2Var()(val));
         } catch (std::exception &e) {
             LOG_ERROR() << "ConfigVar::fromString exception"
             << e.what() << "convert: " << "string to " << typeid(m_val).name();
@@ -340,10 +344,36 @@ public:
     }
 
     const T& getVal() const { return m_val; }
-    void setVal(const T& val) { m_val = val; }
+    void setVal(const T& val) { 
+        if (m_val == val) {
+            return;
+        }    
+        for (auto &p : m_cbs) {
+            p.second(m_val, val);
+        }
+        m_val = val; 
+    }
+
+    //观察者模式， 监视配置变更
+    void addListener(uint64_t key, cb callback)
+    {
+        m_cbs[key] = callback;
+    }
+
+    void deleteListener(uint64_t key)
+    {
+        m_cbs.erase(key);
+    }
+
+    void clearListener()
+    {
+        m_cbs.clear();
+    }
+
 
 private:
     T m_val;
+    std::map<uint64_t, cb> m_cbs;
 };
 
 

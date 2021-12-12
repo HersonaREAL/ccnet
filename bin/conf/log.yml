@@ -34,3 +34,5 @@ system:
     strumap:
         fff : "abcdefg"
         sdlafsldf: "sdlfjsld;fsdlf"
+test:
+    change: 2.3333

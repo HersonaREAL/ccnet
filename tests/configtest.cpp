@@ -105,10 +105,28 @@ void test_cfg() {
 #undef TEST_MAP
 }
 
+void test_cb() {
+    ConfigVar<float>::ptr f = Config::lookup("test.change", (float)1.234, "test change config");
+    f->addListener(0, [](const float &old_val, const float &new_val) {
+        LOG_INFO() << "old val: "<< old_val << ", new val: " << new_val;
+    } );
+    f->addListener(1, [](const float &old_val, const float &new_val) {
+        LOG_INFO() << "old val: "<< old_val << ", new val: " << new_val << "2";
+    } );
+    f->addListener(2, [](const float &old_val, const float &new_val) {
+        LOG_INFO() << "old val: "<< old_val << ", new val: " << new_val << "3";
+    } );
+
+    LOG_INFO() << "before: " << f->getVal();
+    YAML::Node root = YAML::LoadFile("/home/cc/ccnet/bin/conf/log.yml");
+    Config::loadFromYAML(root);
+    LOG_INFO() << "after: " << f->getVal();
+}
 
 int main(int argc, char *argv[]) {
 
     test_yaml();
     test_cfg();
+    test_cb();
     return 0;
 }
