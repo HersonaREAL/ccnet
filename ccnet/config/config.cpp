@@ -3,7 +3,6 @@
 
 namespace ccnet {
 
-Config::ConfigVarMap Config::s_datas ;
 
 
 // YAML map 使用前缀扁平化

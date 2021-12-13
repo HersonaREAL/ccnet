@@ -14,7 +14,8 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include "../utils/utils.h"
+#include <set>
+#include <utils.h>
 
 #define CCNET_LOG_LEVEL(logger, level) \
 		if (logger->getLevel() <= level) \
@@ -99,6 +100,7 @@ public:
 	};
 
 	static const char* ToString(LogLevel::Level level);
+	static LogLevel::Level ToLevel(const std::string &str);
 };
 
 
@@ -240,6 +242,23 @@ private:
 	std::unordered_map<std::string, Logger::ptr> m_loggerMap;
 };
 
+struct LogAppenderConf
+{
+	int type;
+	LogLevel::Level level;
+	std::string formatter;
+};
+
+struct LogConf
+{
+	std::string name;
+	std::string formatter;
+	LogLevel::Level level;
+	std::vector<LogAppenderConf> appenders;
+	bool operator<(const LogConf& rhs) const {
+		return name < rhs.name;
+	}
+};
 
 using LogMgr = Singleton<LogManager>;
 

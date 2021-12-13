@@ -19,6 +19,20 @@ const char* LogLevel::ToString(LogLevel::Level level)
         return "UNKNOW";          
     }
 }
+LogLevel::Level LogLevel::ToLevel(const std::string &str) 
+{
+#define Cast2Level(level_str) \
+    if (str == #level_str) { \
+        return LogLevel::level_str;\
+    }
+    Cast2Level(DEBUG)
+    Cast2Level(INFO)
+    Cast2Level(WARN)
+    Cast2Level(ERROR)
+    Cast2Level(FATAL)
+#undef Cast2Level
+    return LogLevel::UNKNOW;
+}
 
 LogEvent::LogEvent(const char *fileName, int32_t line, uint32_t elapse, 
 				uint32_t threadId, uint32_t fiberId, uint64_t time)

@@ -303,6 +303,48 @@ public:
     }
 };
 
+
+//偏特化logcof
+template<>
+class BaseCast<LogConf, std::string>
+{
+public:
+    std::string operator()(const LogConf &vals) {
+        //TODO
+        return "";
+    }
+};
+
+template<>
+class BaseCast<std::string,  LogConf>
+{
+public:
+    LogConf operator()(const std::string &str) {
+        //TODO
+        YAML::Node n = YAML::Load(str);
+        LogConf res;
+        if (!n["name"].IsDefined())
+            return res;
+        res.name = n["name"].as<std::string>();    
+
+        res.level = n["level"].IsDefined() ? 
+                    LogLevel::ToLevel(n["level"].as<std::string>()) : LogLevel::UNKNOW;
+
+        res.formatter = n["formatter"].IsDefined() ? 
+                    n["formatter"].as<std::string>() : "";
+
+        // cast appenders
+        if (n["appenders"].IsDefined()) {
+            //TODO
+        }
+        return res;
+    }    
+};
+
+//偏特化logappenders
+
+
+
 // 支持复杂类型转str以及str转复杂类型
 template<class T, class Cast2Str = BaseCast<T, std::string>, 
                   class Cast2Var = BaseCast<std::string, T>>
@@ -387,8 +429,8 @@ public:
     static typename ConfigVar<T>::ptr lookup(const std::string &name, 
                                              const T& default_val, const std::string& description = "") 
     {
-        auto it = s_datas.find(name);
-        if (it != s_datas.end()) {
+        auto it = s_datas().find(name);
+        if (it != s_datas().end()) {
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
             if (tmp) {
                 // 存在且类型相同
@@ -409,24 +451,29 @@ public:
         }
 
         typename ConfigVar<T>::ptr v = std::make_shared<ConfigVar<T>>(name, default_val, description);
-        s_datas[name] = v;
+        s_datas()[name] = v;
         return v;
     }
 
     template<class T>
     static typename ConfigVar<T>::ptr lookup(const std::string &name) {
-        auto it = s_datas.find(name);
-        return it == s_datas.end() ? nullptr : std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+        auto it = s_datas().find(name);
+        return it == s_datas().end() ? nullptr : std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
 
     static ConfigVarBase::ptr lookupBase(const std::string &name) {
-        auto it = s_datas.find(name);
-        return it == s_datas.end() ? nullptr : it->second;
+        auto it = s_datas().find(name);
+        return it == s_datas().end() ? nullptr : it->second;
     }
 
     static void loadFromYAML(const YAML::Node &node);
+
+//防止静态变量未初始化直接被使用 
+    static ConfigVarMap& s_datas() {
+        static ConfigVarMap s_datas;
+        return s_datas;
+    }
 private:
-    static ConfigVarMap s_datas;
 };
 }
 
