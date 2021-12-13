@@ -1,4 +1,6 @@
 #include <config.h>
+#include <iostream>
+#include <memory>
 #include "log.h"
 
 namespace ccnet {
@@ -113,14 +115,57 @@ void Logger::delAppender(LogAppender::ptr appender)
         }
     }
 }
-
+ 
+void Logger::setFormatter(const std::string &str) {
+    if (!str.empty()) {
+        m_formater = std::make_shared<LogFormatter>(str);
+    }
+}
 
 struct LogIniter
 {
 	LogIniter() {
         auto g_logs_defs = g_logs_defines();
-        g_logs_defs->addListener(0x55555555, [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
-            //TODO 增删查改
+        g_logs_defs->addListener(0x5555555555555555, [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
+            //增 改
+            for (const LogConf& conf : new_val) {
+                auto it = old_val.find(conf);
+
+                // 存在且相同， 下一个， 否则重置所有熟悉
+                if (it != old_val.end() && (*it) == conf)
+                    continue;
+
+                // 不存在时会新增一个
+                auto lg = CCNET_LOG_NAME(conf.name);
+                lg->setLevel(conf.level);
+                if (!conf.formatter.empty()) {
+                    lg->setFormatter(conf.formatter);
+                }
+
+                lg->clearAppender();
+                for (const auto &appender : conf.appenders) {
+                    LogAppender::ptr ap;
+                    switch(appender.type) {
+                    case 0:
+                        ap.reset(new StdoutLogAppender());
+                        break;
+                    case 1:
+                        ap.reset(new FileLogAppender(appender.file));
+                        break;
+                    //etc.
+                    default:
+                        std::cerr << "g_logs_def listener: unknow appender type" << std::endl;
+                        continue;
+                    }
+
+                    ap->setLevel(appender.level);
+                    ap->setFormatter(appender.formatter);
+
+                    lg->addAppender(ap);
+                }
+            }
+
+            //TODO删除
         });
 	}
 

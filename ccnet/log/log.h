@@ -134,6 +134,7 @@ public:
 
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 	void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+	void setFormatter(const std::string &str);
 	LogFormatter::ptr getFormatter() const { return m_formatter; }
 	void setLevel(LogLevel::Level level) { m_level = level; }
 	LogLevel::Level getLevel() const { return m_level; }
@@ -158,8 +159,13 @@ public:
 
 	void addAppender(LogAppender::ptr appender);
 	void delAppender(LogAppender::ptr appender);
+	void clearAppender() { m_appenders.clear(); }
 	LogLevel::Level getLevel() const { return m_level; }
 	void setLevel(LogLevel::Level lv) { m_level = lv; } 
+
+	LogFormatter::ptr getFormatter() const { return m_formater; }
+	void setFormatter(const std::string &str);
+	void setFormatter(LogFormatter::ptr formatter) { m_formater = formatter; }
 
 	const std::string& getName() const { return m_name; }
 private:

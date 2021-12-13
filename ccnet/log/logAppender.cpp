@@ -1,4 +1,5 @@
 #include "log.h"
+#include <memory>
 
 namespace ccnet {
 
@@ -27,6 +28,12 @@ bool FileLogAppender::reopen() {
 void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event){
     if (level >= m_level) {
         std::cout << m_formatter->format(logger, level, event);
+    }
+}
+
+void LogAppender::setFormatter(const std::string &str) {
+    if (!str.empty()) {
+        m_formatter = std::make_shared<LogFormatter>(str);
     }
 }
 
