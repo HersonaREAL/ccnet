@@ -1,3 +1,4 @@
+#include <config.h>
 #include "log.h"
 
 namespace ccnet {
@@ -112,5 +113,24 @@ void Logger::delAppender(LogAppender::ptr appender)
         }
     }
 }
+
+
+struct LogIniter
+{
+	LogIniter() {
+        auto g_logs_defs = g_logs_defines();
+        g_logs_defs->addListener(0x55555555, [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
+            //TODO 增删查改
+        });
+	}
+
+	static ConfigVar<std::set<LogConf> >::ptr g_logs_defines() {
+		static ConfigVar<std::set<LogConf> >::ptr g_logs_defines = Config::lookup("logs", std::set<LogConf>(), "logs configuration");
+		return g_logs_defines;
+	}
+};
+
+// main启动前初始化日志
+static LogIniter __log_init;
 
 }

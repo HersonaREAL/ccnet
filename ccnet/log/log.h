@@ -242,11 +242,19 @@ private:
 	std::unordered_map<std::string, Logger::ptr> m_loggerMap;
 };
 
+
 struct LogAppenderConf
 {
 	int type;
-	LogLevel::Level level;
+	LogLevel::Level level = LogLevel::UNKNOW;
+	std::string file;
 	std::string formatter;
+	bool operator==(const LogAppenderConf& rhs) const {
+		return type == rhs.type &&
+			   level == rhs.level &&
+			   file == rhs.file &&
+			   formatter == rhs.formatter;		
+	}
 };
 
 struct LogConf
@@ -255,10 +263,18 @@ struct LogConf
 	std::string formatter;
 	LogLevel::Level level;
 	std::vector<LogAppenderConf> appenders;
+
+	bool operator==(const LogConf& rhs) const {
+		return name == rhs.name && 
+			   formatter == rhs.formatter &&
+			   level == rhs.level &&
+			   appenders == rhs.appenders;		
+	}
 	bool operator<(const LogConf& rhs) const {
 		return name < rhs.name;
 	}
 };
+
 
 using LogMgr = Singleton<LogManager>;
 
