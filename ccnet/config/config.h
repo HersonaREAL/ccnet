@@ -78,8 +78,9 @@ public:
             // 触发回调
             setVal(Cast2Var()(val));
         } catch (std::exception &e) {
-            LOG_ERROR() << "ConfigVar::fromString exception"
-            << e.what() << "convert: " << "string to " << typeid(m_val).name();
+            LOG_ERROR() << "ConfigVar::fromString exception: "
+            << e.what() << ", convert: " << "string to " << typeid(m_val).name();
+            LOG_ERROR() << "error str: \n" << val <<std::endl;
             return false;
         }
         return true;

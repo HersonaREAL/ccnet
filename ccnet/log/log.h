@@ -24,6 +24,8 @@
 											ccnet::getThreadId(), \
 											ccnet::getFiberId(), time(NULL))).getSs()
 
+#define CCNET_LOG_NAME(name) ccnet::LogMgr::Instance()->getLogger(name)
+
 #define CCNET_LOG_DEBUG(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::DEBUG)
 #define CCNET_LOG_INFO(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::INFO)
 #define CCNET_LOG_WARN(logger) CCNET_LOG_LEVEL(logger, ccnet::LogLevel::WARN)
@@ -43,7 +45,6 @@
 #define CCNET_LOG_FMT_ERROR(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::ERROR, fmt, ##__VA_ARGS__)
 #define CCNET_LOG_FMT_FATAL(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::FATAL, fmt, ##__VA_ARGS__)
 
-#define CCNET_LOG_NAME(name) ccnet::LogMgr::Instance()->getLogger(#name)
 
 //for root log
 #define CCNET_LOG_ROOT() ccnet::LogMgr::Instance()->getRoot()
@@ -57,6 +58,17 @@
 #define LOG_FMT_WARN(fmt, ...) CCNET_LOG_FMT_WARN(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
 #define LOG_FMT_ERROR(fmt, ...) CCNET_LOG_FMT_ERROR(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
 #define LOG_FMT_FATAL(fmt, ...) CCNET_LOG_FMT_FATAL(CCNET_LOG_ROOT(), fmt, ##__VA_ARGS__)
+
+#define LOG_DEBUG_EX(name) CCNET_LOG_DEBUG(CCNET_LOG_NAME(name))
+#define LOG_INFO_EX(name) CCNET_LOG_INFO(CCNET_LOG_NAME(name))
+#define LOG_WARN_EX(name) CCNET_LOG_WARN(CCNET_LOG_NAME(name))
+#define LOG_ERROR_EX(name) CCNET_LOG_ERROR(CCNET_LOG_NAME(name))
+#define LOG_FATAL_EX(name) CCNET_LOG_FATAL(CCNET_LOG_NAME(name))
+#define LOG_FMT_DEBUG_EX(name, fmt, ...) CCNET_LOG_FMT_DEBUG(CCNET_LOG_NAME(name), fmt, ##__VA_ARGS__)
+#define LOG_FMT_INFO_EX(name, fmt, ...) CCNET_LOG_FMT_INFO(CCNET_LOG_NAME(name), fmt, ##__VA_ARGS__)
+#define LOG_FMT_WARN_EX(name, fmt, ...) CCNET_LOG_FMT_WARN(CCNET_LOG_NAME(name), fmt, ##__VA_ARGS__)
+#define LOG_FMT_ERROR_EX(name, fmt, ...) CCNET_LOG_FMT_ERROR(CCNET_LOG_NAME(name), fmt, ##__VA_ARGS__)
+#define LOG_FMT_FATAL_EX(name, fmt, ...) CCNET_LOG_FMT_FATAL(CCNET_LOG_NAME(name), fmt, ##__VA_ARGS__)
 
 
 namespace ccnet {

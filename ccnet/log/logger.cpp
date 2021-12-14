@@ -128,10 +128,11 @@ struct LogIniter
         auto g_logs_defs = g_logs_defines();
         g_logs_defs->addListener(0x5555555555555555, [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
             //增 改
+            LOG_INFO() << "on change logs config";
             for (const LogConf& conf : new_val) {
                 auto it = old_val.find(conf);
 
-                // 存在且相同， 下一个， 否则重置所有熟悉
+                // 存在且相同， 下一个， 否则重置所有属性
                 if (it != old_val.end() && (*it) == conf)
                     continue;
 
@@ -162,10 +163,21 @@ struct LogIniter
                     ap->setFormatter(appender.formatter);
 
                     lg->addAppender(ap);
+                    // std::cout << "add ap, who: " << lg->getName() << std::endl;
                 }
+                std::cout << "create/change logs: " << conf.name << std::endl;
             }
 
             //TODO删除
+            for (const LogConf &old_conf : old_val) {
+                auto it = new_val.find(old_conf);
+                if (it == new_val.end()) {
+                    auto lg = CCNET_LOG_NAME(old_conf.name);
+                    lg->clearAppender();
+                    lg->setLevel((LogLevel::Level)999);
+                    std::cout << "delete log: " << old_conf.name << std::endl;
+                }
+            }
         });
 	}
 

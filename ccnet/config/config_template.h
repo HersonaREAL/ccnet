@@ -132,7 +132,6 @@ public:
         typename std::set<T> res;
 
         assert(node.IsSequence());
-
         std::stringstream ss;
         for (int i = 0; i < sz; i++) {
             ss.str("");
@@ -328,9 +327,9 @@ public:
 
                 // level无定义使用logger的
                 if (apnd["level"].IsDefined()) {
-                    apcf.level = res.level;
-                } else {
                     apcf.level = LogLevel::ToLevel(apnd["level"].as<std::string>());
+                } else {
+                    apcf.level = res.level;
                 }
                 res.appenders.push_back(apcf);
             }

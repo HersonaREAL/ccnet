@@ -13,19 +13,20 @@ template<class T, bool is_thread_safe = true>
 class Singleton
 {
 public:
-    static T* Instance() {
-        static T *t; 
+    static std::shared_ptr<T> Instance() {
+        //使用智能指针，程序结束时可析构掉对象
+        static std::shared_ptr<T> t; 
         static std::mutex lock;
         if (!is_thread_safe) {
             if (!t)
-                t = new T;
+                t.reset(new T);
             return t;
         }
 
         if (!t) {
             std::unique_lock<std::mutex> unique_locker(lock);
             if (!t)
-                t = new T;
+                t.reset(new T);
         }
         return t;
     }
