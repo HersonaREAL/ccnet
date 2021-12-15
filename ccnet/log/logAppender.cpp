@@ -1,5 +1,6 @@
 #include "log.h"
 #include <memory>
+#include <sstream>
 
 namespace ccnet {
 
@@ -31,10 +32,33 @@ void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level leve
     }
 }
 
+
+
+
 void LogAppender::setFormatter(const std::string &str) {
     if (!str.empty()) {
         m_formatter = std::make_shared<LogFormatter>(str);
     }
+}
+
+std::string StdoutLogAppender::toYAML() const  {
+    YAML::Node node;
+    std::stringstream ss;
+    node["type"] = "StdoutLogAppender";
+    node["level"] = LogLevel::ToString(m_level);
+    ss << node;
+    return ss.str();
+}
+
+
+std::string FileLogAppender::toYAML() const  {
+    YAML::Node node;
+    std::stringstream ss;
+    node["type"] = "FileLogAppender";
+    node["level"] = LogLevel::ToString(m_level);
+    node["file"] = m_filename;
+    ss << node;
+    return ss.str();
 }
 
 }

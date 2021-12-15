@@ -13,6 +13,8 @@ using namespace ccnet;
 void test_logcfg() {
     YAML::Node root = YAML::LoadFile("/home/cc/ccnet/bin/conf/LogConf.yml");
     Config::loadFromYAML(root);
+    std::cout << LogMgr::Instance()->toYAML() << std::endl;
+
     LOG_INFO_EX("root") << "this is root info!";
     LOG_DEBUG_EX("root") << "this is root info!";
     LOG_WARN_EX("root") << "this is root info!";

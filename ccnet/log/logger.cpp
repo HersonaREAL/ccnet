@@ -1,6 +1,7 @@
 #include <config.h>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include "log.h"
 
 namespace ccnet {
@@ -24,15 +25,21 @@ const char* LogLevel::ToString(LogLevel::Level level)
 }
 LogLevel::Level LogLevel::ToLevel(const std::string &str) 
 {
-#define Cast2Level(level_str) \
+#define Cast2Level(level_str, level) \
     if (str == #level_str) { \
-        return LogLevel::level_str;\
+        return LogLevel::level;\
     }
-    Cast2Level(DEBUG)
-    Cast2Level(INFO)
-    Cast2Level(WARN)
-    Cast2Level(ERROR)
-    Cast2Level(FATAL)
+    Cast2Level(DEBUG, DEBUG)
+    Cast2Level(INFO, INFO)
+    Cast2Level(WARN, WARN)
+    Cast2Level(ERROR, ERROR)
+    Cast2Level(FATAL, FATAL)
+
+    Cast2Level(debug, DEBUG)
+    Cast2Level(info, INFO)
+    Cast2Level(warn, WARN)
+    Cast2Level(error, ERROR)
+    Cast2Level(fatal, FATAL)
 #undef Cast2Level
     return LogLevel::UNKNOW;
 }
@@ -49,9 +56,9 @@ Logger::Logger(const std::string& name, const std::string& fmt)
     : m_name(name), m_level(LogLevel::DEBUG) 
 {
     if (fmt.empty())
-        m_formater.reset(new LogFormatter("%d%T%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n"));
+        m_formatter.reset(new LogFormatter("%d%T%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n"));
     else
-        m_formater.reset(new LogFormatter(fmt));
+        m_formatter.reset(new LogFormatter(fmt));
 }
 
 // 输出到每个appender
@@ -101,7 +108,7 @@ void Logger::fatal(LogEvent::ptr ev)
 void Logger::addAppender(LogAppender::ptr appender) 
 {
     if (!appender->getFormatter()) {
-        appender->setFormatter(m_formater);
+        appender->setFormatter(m_formatter);
     }
     m_appenders.push_back(appender);
 }
@@ -118,8 +125,26 @@ void Logger::delAppender(LogAppender::ptr appender)
  
 void Logger::setFormatter(const std::string &str) {
     if (!str.empty()) {
-        m_formater = std::make_shared<LogFormatter>(str);
+        m_formatter = std::make_shared<LogFormatter>(str);
     }
+}
+
+
+std::string Logger::toYAML() const {
+    YAML::Node node;
+    std::stringstream ss;
+    node["name"] = m_name;
+    node["level"] = LogLevel::ToString(m_level);
+    if (m_formatter) {
+        node["formatter"] = m_formatter->getPattern();
+    }
+
+    for (const auto &ap : m_appenders) {
+        node["appenders"].push_back(YAML::Load(ap->toYAML()));
+    }
+
+    ss << node;
+    return ss.str();
 }
 
 struct LogIniter

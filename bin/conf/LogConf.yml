@@ -1,13 +1,13 @@
 logs:
   - name: root
-    level: INFO
+    level: debug
     appenders:
       - type: FileLogAppender
         file: RootLog.txt
         level: ERROR
       - type: StdoutLogAppender
   - name: system
-    level: DEBUG
+    level: info
     formatter: "%d%T%m%n"
     appenders:
       - type: FileLogAppender

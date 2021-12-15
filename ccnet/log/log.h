@@ -14,6 +14,9 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <yaml-cpp/node/node.h>
+#include <yaml-cpp/node/parse.h>
+#include <yaml-cpp/yaml.h>
 #include <set>
 #include <utils.h>
 
@@ -123,6 +126,8 @@ public:
 	LogFormatter(const std::string &pattern);
 
 	std::string format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
+
+	const std::string &getPattern() const { return m_pattern; }
 public:
 	class FormatItem {
 	public:
@@ -150,6 +155,8 @@ public:
 	LogFormatter::ptr getFormatter() const { return m_formatter; }
 	void setLevel(LogLevel::Level level) { m_level = level; }
 	LogLevel::Level getLevel() const { return m_level; }
+
+	virtual std::string toYAML() const = 0;
 protected:
 	LogLevel::Level m_level = LogLevel::DEBUG;
 	LogFormatter::ptr m_formatter;
@@ -175,16 +182,17 @@ public:
 	LogLevel::Level getLevel() const { return m_level; }
 	void setLevel(LogLevel::Level lv) { m_level = lv; } 
 
-	LogFormatter::ptr getFormatter() const { return m_formater; }
+	LogFormatter::ptr getFormatter() const { return m_formatter; }
 	void setFormatter(const std::string &str);
-	void setFormatter(LogFormatter::ptr formatter) { m_formater = formatter; }
+	void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
 
 	const std::string& getName() const { return m_name; }
+	std::string toYAML() const ;
 private:
 	std::string m_name;				//日志名称
 	LogLevel::Level m_level;		//日志级别
 	std::list<LogAppender::ptr> m_appenders;//Appender集合
-	LogFormatter::ptr m_formater;   //默认formater
+	LogFormatter::ptr m_formatter;   //默认formater
 };
 
 // wrap, 用于宏的raii
@@ -221,6 +229,7 @@ class StdoutLogAppender : public LogAppender {
 public:
 	using ptr = std::shared_ptr<StdoutLogAppender>;
 	void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
+	std::string toYAML() const override;
 };
 
 //file
@@ -230,6 +239,7 @@ public:
 	FileLogAppender(const std::string &filename);
 	void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
 	bool reopen();
+	std::string toYAML() const override;
 private:
 	std::string m_filename;
 	std::ofstream m_filestream;
@@ -248,6 +258,17 @@ public:
 		return m_loggerMap[name] = std::make_shared<Logger>(name);
 	}
 	Logger::ptr getRoot() const { return m_root; }
+
+	std::string toYAML() const {
+		std::stringstream ss;
+		YAML::Node node;
+		for (const auto &p : m_loggerMap) {
+			YAML::Node tmpNode = YAML::Load(p.second->toYAML());
+			node.push_back(tmpNode);
+		}
+		ss << node;
+		return ss.str();
+	}
 
 private:
 	LogManager() 
