@@ -52,7 +52,7 @@ public:
         assert(node.IsSequence());
 
         std::stringstream ss;
-        for (int i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) {
             ss.str("");
             ss << node[i];
             res.push_back(cast2Var()(ss.str()));
@@ -93,7 +93,7 @@ public:
         assert(node.IsSequence());
 
         std::stringstream ss;
-        for (int i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) {
             ss.str("");
             ss << node[i];
             res.push_back(cast2Var()(ss.str()));
@@ -133,7 +133,7 @@ public:
 
         assert(node.IsSequence());
         std::stringstream ss;
-        for (int i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) {
             ss.str("");
             ss << node[i];
             res.insert(cast2Var()(ss.str()));
@@ -174,7 +174,7 @@ public:
         assert(node.IsSequence());
 
         std::stringstream ss;
-        for (int i = 0; i < sz; i++) {
+        for (size_t i = 0; i < sz; i++) {
             ss.str("");
             ss << node[i];
             res.insert(cast2Var()(ss.str()));
@@ -321,8 +321,6 @@ public:
                 // formatter 无自己定义的就用logger的                   
                 if (apnd["formatter"].IsDefined()) {
                     apcf.formatter = apnd["formatter"].as<std::string>();
-                } else {
-                    apcf.formatter = res.formatter;
                 }
 
                 // level无定义使用logger的

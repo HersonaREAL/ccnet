@@ -34,10 +34,17 @@ void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level leve
 
 
 
+void LogAppender::setFormatter(LogFormatter::ptr val, bool setFlag) {
+    m_formatter = val;
+    if (setFlag) {
+        m_hasFormatter = m_formatter ? true : false;
+        // std::cout << "hasFormatter: " << m_hasFormatter << ", formatter: " << m_formatter->getPattern() << std::endl;
+    }
+}
 
-void LogAppender::setFormatter(const std::string &str) {
+void LogAppender::setFormatter(const std::string &str, bool setFlag) {
     if (!str.empty()) {
-        m_formatter = std::make_shared<LogFormatter>(str);
+        setFormatter(std::make_shared<LogFormatter>(str), setFlag);
     }
 }
 
@@ -46,6 +53,9 @@ std::string StdoutLogAppender::toYAML() const  {
     std::stringstream ss;
     node["type"] = "StdoutLogAppender";
     node["level"] = LogLevel::ToString(m_level);
+    if (m_hasFormatter && !m_formatter->isError()) {
+        node["formatter"] = m_formatter->getPattern();
+    }
     ss << node;
     return ss.str();
 }
@@ -57,6 +67,9 @@ std::string FileLogAppender::toYAML() const  {
     node["type"] = "FileLogAppender";
     node["level"] = LogLevel::ToString(m_level);
     node["file"] = m_filename;
+    if (m_hasFormatter && !m_formatter->isError()) {
+        node["formatter"] = m_formatter->getPattern();
+    }
     ss << node;
     return ss.str();
 }

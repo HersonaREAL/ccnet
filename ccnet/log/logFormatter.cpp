@@ -274,7 +274,7 @@ void LogFormatter::init()
             if (it == s_fmt_items.end()) {
                 //格式错误
                 m_items.push_back(std::make_shared<StringFormatItem>("<<error fmt>>: " + std::get<0>(i)));
-
+                m_isError = true;
             }else {
                 m_items.push_back(it->second(std::get<1>(i))); 
             }

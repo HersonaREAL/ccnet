@@ -128,6 +128,7 @@ public:
 	std::string format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
 
 	const std::string &getPattern() const { return m_pattern; }
+	bool isError() const { return m_isError; }
 public:
 	class FormatItem {
 	public:
@@ -139,6 +140,7 @@ public:
 
 	void init();
 private:
+	bool m_isError = false;
 	std::string m_pattern;
 	std::vector<FormatItem::ptr> m_items;
 };
@@ -150,14 +152,16 @@ public:
 	virtual ~LogAppender() {}
 
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
-	void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
-	void setFormatter(const std::string &str);
+	void setFormatter(LogFormatter::ptr val, bool setFlag = true);
+	void setFormatter(const std::string &str, bool setFlag = true);
 	LogFormatter::ptr getFormatter() const { return m_formatter; }
 	void setLevel(LogLevel::Level level) { m_level = level; }
 	LogLevel::Level getLevel() const { return m_level; }
+	bool hasFormatter() const { return m_hasFormatter; }
 
 	virtual std::string toYAML() const = 0;
 protected:
+	bool m_hasFormatter = false;
 	LogLevel::Level m_level = LogLevel::DEBUG;
 	LogFormatter::ptr m_formatter;
 };
@@ -184,7 +188,7 @@ public:
 
 	LogFormatter::ptr getFormatter() const { return m_formatter; }
 	void setFormatter(const std::string &str);
-	void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
+	void setFormatter(LogFormatter::ptr formatter);
 
 	const std::string& getName() const { return m_name; }
 	std::string toYAML() const ;
@@ -275,6 +279,7 @@ private:
 	{ 
 		m_root.reset(new Logger()); 
 		m_root->addAppender(StdoutLogAppender::ptr(new StdoutLogAppender())); 
+		m_loggerMap[m_root->getName()] = m_root;
 	}
 private:
 	Logger::ptr m_root;

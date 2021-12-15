@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILECOMMANDS ON)
 
+SET(CMAKE_BUILD_TYPE "Debug") 
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+
 include_directories(ccnet/include)
 
 set(LIB_SRC
@@ -18,7 +22,8 @@ set(LIB_SRC
     ccnet/config/config.cpp
 )
 
-add_library(ccnet SHARED ${LIB_SRC})
+# add_library(ccnet SHARED ${LIB_SRC})
+add_library(ccnet  ${LIB_SRC})
 target_link_libraries(ccnet PUBLIC yaml-cpp)
 
 add_executable(logtest tests/logtest.cpp)

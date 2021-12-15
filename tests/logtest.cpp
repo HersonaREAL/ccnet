@@ -18,13 +18,18 @@ void test_logcfg() {
     LOG_INFO_EX("root") << "this is root info!";
     LOG_DEBUG_EX("root") << "this is root info!";
     LOG_WARN_EX("root") << "this is root info!";
-    LOG_ERROR_EX("root") << "this is root info!";
-    LOG_FATAL_EX("root") << "this is root info!";
+    
+    // CCNET_LOG_NAME("root")->setFormatter("%p%T%m%n");
+    CCNET_LOG_ROOT()->setFormatter("%p%T%m%n");
+
+    LOG_ERROR_EX("root") << "this is root error!";
+    LOG_FATAL_EX("root") << "this is root fatal!";
     LOG_INFO_EX("system") << "this is system info!";
     LOG_DEBUG_EX("system") << "this is system debug!";
     LOG_WARN_EX("system") << "this is system warn!";
     LOG_ERROR_EX("system") << "this is system error!";
     LOG_FATAL_EX("system") << "this is system fatal!";
+
 }
 
 int main(int argc, char *argv[]) { 

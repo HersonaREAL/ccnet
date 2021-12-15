@@ -108,7 +108,7 @@ void Logger::fatal(LogEvent::ptr ev)
 void Logger::addAppender(LogAppender::ptr appender) 
 {
     if (!appender->getFormatter()) {
-        appender->setFormatter(m_formatter);
+        appender->setFormatter(m_formatter, false);
     }
     m_appenders.push_back(appender);
 }
@@ -123,9 +123,18 @@ void Logger::delAppender(LogAppender::ptr appender)
     }
 }
  
+void Logger::setFormatter(LogFormatter::ptr formatter) { 
+    m_formatter = formatter; 
+    for (const auto &aptr : m_appenders) {
+        if (!aptr->hasFormatter()) {
+            aptr->setFormatter(m_formatter, false);
+        }
+    }
+}
+
 void Logger::setFormatter(const std::string &str) {
     if (!str.empty()) {
-        m_formatter = std::make_shared<LogFormatter>(str);
+        setFormatter(std::make_shared<LogFormatter>(str));
     }
 }
 
@@ -169,14 +178,14 @@ struct LogIniter
                 }
 
                 lg->clearAppender();
-                for (const auto &appender : conf.appenders) {
+                for (const auto &appendercfg : conf.appenders) {
                     LogAppender::ptr ap;
-                    switch(appender.type) {
+                    switch(appendercfg.type) {
                     case 0:
                         ap.reset(new StdoutLogAppender());
                         break;
                     case 1:
-                        ap.reset(new FileLogAppender(appender.file));
+                        ap.reset(new FileLogAppender(appendercfg.file));
                         break;
                     //etc.
                     default:
@@ -184,8 +193,13 @@ struct LogIniter
                         continue;
                     }
 
-                    ap->setLevel(appender.level);
-                    ap->setFormatter(appender.formatter);
+                    ap->setLevel(appendercfg.level);
+
+                    // 若空则使用Logger的，但是不设置has标志
+                    if (!appendercfg.formatter.empty())
+                        ap->setFormatter(appendercfg.formatter);
+                    else
+                        ap->setFormatter(lg->getFormatter(), false);
 
                     lg->addAppender(ap);
                     // std::cout << "add ap, who: " << lg->getName() << std::endl;
