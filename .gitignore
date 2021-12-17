@@ -1,5 +1,5 @@
 .clangd
-bin/*test
+bin/tests
 build
 compile_commands.json
 lib
