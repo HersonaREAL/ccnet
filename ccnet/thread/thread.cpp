@@ -1,4 +1,6 @@
+#include <functional>
 #include <log.h>
+#include <pthread.h>
 #include <stdexcept>
 #include "thread.h"
 
@@ -9,6 +11,7 @@ static thread_local Thread* t_thread = nullptr;
 static thread_local std::string t_thread_name = "UNKNOW";
 
 Thread::Thread(std::function<void()> cb, const std::string name)
+    : m_cb(cb)
 {
     if (!name.empty()) {
         m_name = name;
@@ -47,7 +50,14 @@ void* Thread::run(void *arg)
     Thread *thread = static_cast<Thread*>(arg);
     t_thread = thread;
     thread->m_id = getThreadId();
-    //TODO
+    pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
+    
+    //清空对象里的function，防止引用智能指针导致资源不释放
+    std::function<void()> cb;
+
+    cb.swap(thread->m_cb);
+    cb();
+
     return nullptr;
 }
 
