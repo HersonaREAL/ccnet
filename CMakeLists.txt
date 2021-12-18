@@ -26,9 +26,11 @@ include_directories(ccnet/include)
 
 #3rdparty
 find_package(Boost REQUIRED)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 set(3rdparty
     yaml-cpp
+    Threads::Threads
 )
 
 #ccnet
