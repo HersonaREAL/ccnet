@@ -2,10 +2,10 @@ logs:
   - name: root
     level: debug
     appenders:
-      - type: FileLogAppender
-        file: RootLog.txt
-        level: ERROR
-        formatter: "%d%T%m%n"
+      # - type: FileLogAppender
+        # file: RootLog.txt
+        # level: ERROR
+        # formatter: "%d%T%m%n"
       - type: StdoutLogAppender
   - name: system
     level: info

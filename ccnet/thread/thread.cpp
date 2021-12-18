@@ -49,6 +49,7 @@ void* Thread::run(void *arg)
 {
     Thread *thread = static_cast<Thread*>(arg);
     t_thread = thread;
+    t_thread_name = thread->m_name;
     thread->m_id = getThreadId();
     pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
     
