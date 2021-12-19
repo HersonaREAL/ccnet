@@ -1,13 +1,21 @@
 #pragma once
 
+#include <cstdint>
+#include <bits/stdint-uintn.h>
 #include <string>
 #include <thread>
 #include <functional>
 #include <memory>
 #include <cassert>
+#include <cstdint>
 #include <pthread.h>
+#include <semaphore.h>
+
+#include "lock.h"
 
 namespace ccnet {
+
+
 
 class Thread 
 {
@@ -34,6 +42,7 @@ private:
     pthread_t m_thread = 0;
     std::function<void()> m_cb = []() { assert(0); };
     std::string m_name = "UNKNOW";
+    Semaphore m_semaphore;
 };
 
 }//ccnet

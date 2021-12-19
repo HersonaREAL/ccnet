@@ -1,6 +1,7 @@
 #include <functional>
 #include <log.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdexcept>
 #include "thread.h"
 
@@ -22,7 +23,7 @@ Thread::Thread(std::function<void()> cb, const std::string name)
         LOG_ERROR() << "pthread_create fail, " << "name: " << name;
         throw std::logic_error("pthread_create error");
     }
-    
+    m_semaphore.wait();
 }
 
 Thread::~Thread()
@@ -55,8 +56,10 @@ void* Thread::run(void *arg)
     
     //清空对象里的function，防止引用智能指针导致资源不释放
     std::function<void()> cb;
-
     cb.swap(thread->m_cb);
+
+    thread->m_semaphore.notify();
+
     cb();
 
     return nullptr;
@@ -81,4 +84,30 @@ void Thread::SetName(const std::string &name)
     t_thread_name = name;
 }
 
+
+Semaphore::Semaphore(uint32_t count)
+{
+    if (sem_init(&m_semaphore,  0,  count)) {
+        throw std::logic_error("sem_init error");
+    }
+}
+
+Semaphore::~Semaphore()
+{
+    sem_destroy(&m_semaphore);
+}
+
+void Semaphore::wait()
+{
+    if (sem_wait(&m_semaphore)) {
+        throw std::logic_error("sem_wait error");
+    }
+}
+
+void Semaphore::notify()
+{
+    if (sem_post(&m_semaphore)) {
+        throw std::logic_error("sem_post error");
+    }
+}
 }//ccnet;
