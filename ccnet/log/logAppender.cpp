@@ -12,6 +12,7 @@ FileLogAppender::FileLogAppender(const std::string &filename)
 
 void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event){
     if (level >= m_level && m_filestream) {
+        LockType::Lock lock(m_mutex);
         m_filestream << m_formatter->format(logger, level, event);
     }
 }
@@ -28,6 +29,7 @@ bool FileLogAppender::reopen() {
 
 void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event){
     if (level >= m_level) {
+        LockType::Lock lock(m_mutex);
         std::cout << m_formatter->format(logger, level, event);
     }
 }
@@ -35,6 +37,7 @@ void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level leve
 
 
 void LogAppender::setFormatter(LogFormatter::ptr val, bool setFlag) {
+    LockType::Lock lock(m_mutex);
     m_formatter = val;
     if (setFlag) {
         m_hasFormatter = m_formatter ? true : false;
@@ -48,7 +51,15 @@ void LogAppender::setFormatter(const std::string &str, bool setFlag) {
     }
 }
 
-std::string StdoutLogAppender::toYAML() const  {
+
+LogFormatter::ptr LogAppender::getFormatter()
+{
+    LockType::Lock lock(m_mutex);
+    return m_formatter;
+}
+
+std::string StdoutLogAppender::toYAML() {
+    LockType::Lock lock(m_mutex);
     YAML::Node node;
     std::stringstream ss;
     node["type"] = "StdoutLogAppender";
@@ -61,7 +72,8 @@ std::string StdoutLogAppender::toYAML() const  {
 }
 
 
-std::string FileLogAppender::toYAML() const  {
+std::string FileLogAppender::toYAML() {
+    LockType::Lock lock(m_mutex);
     YAML::Node node;
     std::stringstream ss;
     node["type"] = "FileLogAppender";

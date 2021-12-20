@@ -19,6 +19,7 @@
 #include <yaml-cpp/yaml.h>
 #include <set>
 #include <utils.h>
+#include <lock.h>
 
 #define CCNET_LOG_LEVEL(logger, level) \
 		if (logger->getLevel() <= level) \
@@ -149,20 +150,22 @@ private:
 class LogAppender {
 public:
 	using ptr = std::shared_ptr<LogAppender>;
+	using LockType = Spin;
 	virtual ~LogAppender() {}
 
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 	void setFormatter(LogFormatter::ptr val, bool setFlag = true);
 	void setFormatter(const std::string &str, bool setFlag = true);
-	LogFormatter::ptr getFormatter() const { return m_formatter; }
+	LogFormatter::ptr getFormatter();
 	void setLevel(LogLevel::Level level) { m_level = level; }
 	LogLevel::Level getLevel() const { return m_level; }
 	bool hasFormatter() const { return m_hasFormatter; }
 
-	virtual std::string toYAML() const = 0;
+	virtual std::string toYAML() = 0;
 protected:
 	bool m_hasFormatter = false;
 	LogLevel::Level m_level = LogLevel::DEBUG;
+	LockType m_mutex;
 	LogFormatter::ptr m_formatter;
 };
 
@@ -170,6 +173,7 @@ protected:
 class Logger : public std::enable_shared_from_this<Logger>{
 public:
 	using ptr = std::shared_ptr<Logger>;
+	using LockType = Spin;
 	Logger(const std::string& name = "root", const std::string& fmt = "");
 	void log(LogLevel::Level level, LogEvent::ptr event);
 
@@ -182,7 +186,7 @@ public:
 
 	void addAppender(LogAppender::ptr appender);
 	void delAppender(LogAppender::ptr appender);
-	void clearAppender() { m_appenders.clear(); }
+	void clearAppender();
 	LogLevel::Level getLevel() const { return m_level; }
 	void setLevel(LogLevel::Level lv) { m_level = lv; } 
 
@@ -191,12 +195,13 @@ public:
 	void setFormatter(LogFormatter::ptr formatter);
 
 	const std::string& getName() const { return m_name; }
-	std::string toYAML() const ;
+	std::string toYAML() ;
 private:
 	std::string m_name;				//日志名称
 	LogLevel::Level m_level;		//日志级别
 	std::list<LogAppender::ptr> m_appenders;//Appender集合
 	LogFormatter::ptr m_formatter;   //默认formater
+	LockType m_mutex;
 };
 
 // wrap, 用于宏的raii
@@ -233,7 +238,7 @@ class StdoutLogAppender : public LogAppender {
 public:
 	using ptr = std::shared_ptr<StdoutLogAppender>;
 	void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
-	std::string toYAML() const override;
+	std::string toYAML() override;
 };
 
 //file
@@ -243,7 +248,7 @@ public:
 	FileLogAppender(const std::string &filename);
 	void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
 	bool reopen();
-	std::string toYAML() const override;
+	std::string toYAML() override;
 private:
 	std::string m_filename;
 	std::ofstream m_filestream;
@@ -253,8 +258,10 @@ private:
 class LogManager
 {
 public:
+	using LockType = Spin;
 	friend class Singleton<LogManager>;
 	Logger::ptr getLogger(const std::string &name) {
+		LockType::Lock lock(m_mutex);
 		auto it = m_loggerMap.find(name);
 		if (it != m_loggerMap.end()) {
 			return it->second;
@@ -263,7 +270,8 @@ public:
 	}
 	Logger::ptr getRoot() const { return m_root; }
 
-	std::string toYAML() const {
+	std::string toYAML() {
+		LockType::Lock lock(m_mutex);
 		std::stringstream ss;
 		YAML::Node node;
 		for (const auto &p : m_loggerMap) {
@@ -284,6 +292,7 @@ private:
 private:
 	Logger::ptr m_root;
 	std::unordered_map<std::string, Logger::ptr> m_loggerMap;
+	LockType m_mutex;
 };
 
 

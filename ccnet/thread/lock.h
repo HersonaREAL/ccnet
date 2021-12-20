@@ -127,10 +127,34 @@ private:
     T &m_mutex;
 };
 
+class Spin
+{
+public:
+    using Lock = ScopedLockImp<Spin>;
+    Spin() {
+        pthread_spin_init(&m_lock, 0);
+    }
+
+    ~Spin() {
+        pthread_spin_destroy(&m_lock);
+    }
+
+    void lock() {
+        pthread_spin_lock(&m_lock);
+    }
+
+    void unlock() {
+        pthread_spin_unlock(&m_lock);
+    }
+
+private:
+    pthread_spinlock_t m_lock;
+};
+
 class Mutex 
 {
 public:
-    using MutexLock = ScopedLockImp<Mutex>;
+    using Lock = ScopedLockImp<Mutex>;
     Mutex() {
         pthread_mutex_init(&m_lock, nullptr);
     }
@@ -179,5 +203,23 @@ public:
 private:
     pthread_rwlock_t m_lock;
 };
+
+// for debug
+class NullMutex
+{
+public:
+    using WriteLock = WriteScopedLockImp<NullMutex>;
+    using ReadLock = ReadScopedLockImp<NullMutex>;
+    using Lock = ScopedLockImp<NullMutex>;
+    
+    NullMutex(){}
+    ~NullMutex(){}
+    void lock(){}
+    void unlock(){}
+    void wrlock(){}
+    void rdlock(){}
+private:
+};
+
 
 }//ccnet

@@ -4,6 +4,7 @@
 #include <string>
 #include <thread.h>
 #include <log.h>
+#include <config.h>
 #include <vector>
 #include <unistd.h>
 
@@ -22,6 +23,9 @@ uint64_t g_test_writeLock = 0;
 ccnet::RWMutex g_RWmutex;
 
 uint64_t g_test_readLock = 0;
+
+uint64_t g_test_spinLock = 0;
+ccnet::Spin g_spin;
 
 void func1() {
     LOG_INFO() << "hi,  name: " << ccnet::Thread::GetName() <<", this->name: " <<  ccnet::Thread::GetThis()->getName()
@@ -43,7 +47,7 @@ void func1() {
 
     // test mutex
     for (size_t i = 0; i < 99999; i++) {
-        ccnet::Mutex::MutexLock lock(g_mutex2);
+        ccnet::Mutex::Lock lock(g_mutex2);
         g_test_mutex_raii++;
     }
 
@@ -58,6 +62,12 @@ void func1() {
         ccnet::RWMutex::ReadLock lock(g_RWmutex);
         g_test_readLock++;
     }
+
+    //test spinlock
+    for (size_t i = 0; i < 99999; i++) {
+        ccnet::Spin::Lock lock(g_spin);
+        g_test_spinLock++;
+    }
 }
 
 
@@ -71,6 +81,31 @@ inline uint64_t res() {
     return res;
 }
 
+void func2() {
+    while(true) {
+        LOG_DEBUG() << "###########################################";
+    }
+}
+
+void func3() {
+    while(true) {
+        LOG_DEBUG() << "*******************************************";
+    }
+}
+
+void WriteLogTest() {
+    YAML::Node root = YAML::LoadFile("/home/cc/ccnet/bin/conf/LogConf.yml");
+    ccnet::Config::loadFromYAML(root);
+    std::vector<ccnet::Thread::ptr> vec;
+
+    for (size_t i = 0; i < thread_cnt; i++) {
+        vec.push_back(std::make_shared<ccnet::Thread>(i&1 ? func2 : func3, "t_" + std::to_string(i)));
+    }
+    for (size_t i = 0; i < thread_cnt; i++) {
+        vec[i]->join();
+    }
+    
+}
 
 int main() {
     std::vector<ccnet::Thread::ptr> vec;
@@ -94,6 +129,9 @@ int main() {
     Check(test_mutex_raii, g_test_mutex_raii)
     Check(test_write_lock, g_test_writeLock)
     Check(test_read_lock, g_test_readLock)
+    Check(test_spin_lock, g_test_spinLock)
+
+    WriteLogTest();
     std::cout << "hello, thread~" << std::endl;
     return 0;
 }

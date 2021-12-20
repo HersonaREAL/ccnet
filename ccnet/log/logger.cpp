@@ -65,6 +65,7 @@ Logger::Logger(const std::string& name, const std::string& fmt)
 void Logger::log(LogLevel::Level level, LogEvent::ptr event) 
 {
     if (level >= m_level) {
+        LockType::Lock lock(m_mutex);
         /*为什么不使用 shared_ptr<A>(this)?
             会产生两个无关智能指针，导致this被释放两次
         */
@@ -107,6 +108,7 @@ void Logger::fatal(LogEvent::ptr ev)
 
 void Logger::addAppender(LogAppender::ptr appender) 
 {
+    LockType::Lock lock(m_mutex);
     if (!appender->getFormatter()) {
         appender->setFormatter(m_formatter, false);
     }
@@ -115,6 +117,7 @@ void Logger::addAppender(LogAppender::ptr appender)
 
 void Logger::delAppender(LogAppender::ptr appender) 
 {
+    LockType::Lock lock(m_mutex);
     for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it) {
         if (*it == appender) {
             m_appenders.erase(it);
@@ -122,8 +125,15 @@ void Logger::delAppender(LogAppender::ptr appender)
         }
     }
 }
+
+void Logger::clearAppender()
+{
+    LockType::Lock lock(m_mutex);
+    m_appenders.clear();
+}
  
 void Logger::setFormatter(LogFormatter::ptr formatter) { 
+    LockType::Lock lock(m_mutex);
     m_formatter = formatter; 
     for (const auto &aptr : m_appenders) {
         if (!aptr->hasFormatter()) {
@@ -139,7 +149,8 @@ void Logger::setFormatter(const std::string &str) {
 }
 
 
-std::string Logger::toYAML() const {
+std::string Logger::toYAML() {
+    LockType::Lock lock(m_mutex);
     YAML::Node node;
     std::stringstream ss;
     node["name"] = m_name;
@@ -160,7 +171,8 @@ struct LogIniter
 {
 	LogIniter() {
         auto g_logs_defs = g_logs_defines();
-        g_logs_defs->addListener(0x5555555555555555, [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
+        g_logs_defs->addListener(0x5555555555555555, 
+            [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
             //增 改
             LOG_INFO() << "on change logs config";
             for (const LogConf& conf : new_val) {

@@ -2,14 +2,14 @@ logs:
   - name: root
     level: debug
     appenders:
-      # - type: FileLogAppender
-        # file: RootLog.txt
-        # level: ERROR
-        # formatter: "%d%T%m%n"
-      - type: StdoutLogAppender
-  - name: system
-    level: info
-    formatter: "%d%T[%p]%T%m%n"
-    appenders:
       - type: FileLogAppender
-        file: SystemLog.txt
+        file: log.txt
+        level: DEBUG
+        # formatter: "%d%T%m%n"
+      # - type: StdoutLogAppender
+  # - name: system
+  #   level: info
+  #   formatter: "%d%T[%p]%T%m%n"
+  #   appenders:
+  #     - type: FileLogAppender
+  #       file: SystemLog.txt
