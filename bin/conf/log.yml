@@ -1,18 +1,18 @@
 logs:
-    - name: root
-      level: info
-      formatter: "%d%T%m%n"
-      appender:
-          - type: FileLogAppender
-            path: log.txt
-          - type: StdoutLogAppender
-    - name: system
-      level: debug
-      formatter: "%d%T%m%n"
-      appender:
-          - type: FileLogAppender
-            path: debuglog.txt
-          - type: StdoutLogAppender
+  - name: root
+    level: debug
+    appenders:
+      - type: FileLogAppender
+        file: log.txt
+        level: DEBUG
+        # formatter: "%d%T%m%n"
+      - type: StdoutLogAppender
+  # - name: system
+  #   level: info
+  #   formatter: "%d%T[%p]%T%m%n"
+  #   appenders:
+  #     - type: FileLogAppender
+  #       file: SystemLog.txt
 system:
     port: 6789
     vec: [7,8,9,10,11,12]

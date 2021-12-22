@@ -43,12 +43,13 @@ void Config::loadFromYAML(const YAML::Node &root)
 
         if (var) {
             if (node.second.IsScalar()) {
-                //字符串转val
+                //字符串转val, fromString已加锁
                 var->fromString(node.second.Scalar());
             } else {
                 //复杂类型转换val
                 std::stringstream ss;
                 ss << node.second;
+                //fromString已加锁
                 var->fromString(ss.str());
             }
         }

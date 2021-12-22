@@ -171,7 +171,7 @@ struct LogIniter
 {
 	LogIniter() {
         auto g_logs_defs = g_logs_defines();
-        g_logs_defs->addListener(0x5555555555555555, 
+        g_logs_defs->addListener( 
             [](const std::set<LogConf>& old_val, const std::set<LogConf>& new_val) {
             //增 改
             LOG_INFO() << "on change logs config";
@@ -229,6 +229,7 @@ struct LogIniter
                     std::cout << "delete log: " << old_conf.name << std::endl;
                 }
             }
+            std::cout << "finish config change !\n";
         });
 	}
 

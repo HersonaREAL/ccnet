@@ -107,13 +107,13 @@ void test_cfg() {
 
 void test_cb() {
     ConfigVar<float>::ptr f = Config::lookup("test.change", (float)1.234, "test change config");
-    f->addListener(0, [](const float &old_val, const float &new_val) {
+    f->addListener([](const float &old_val, const float &new_val) {
         LOG_INFO() << "old val: "<< old_val << ", new val: " << new_val;
     } );
-    f->addListener(1, [](const float &old_val, const float &new_val) {
+    f->addListener([](const float &old_val, const float &new_val) {
         LOG_INFO() << "old val: "<< old_val << ", new val: " << new_val << "2";
     } );
-    f->addListener(2, [](const float &old_val, const float &new_val) {
+    f->addListener([](const float &old_val, const float &new_val) {
         LOG_INFO() << "old val: "<< old_val << ", new val: " << new_val << "3";
     } );
 
@@ -128,5 +128,6 @@ int main(int argc, char *argv[]) {
     test_yaml();
     test_cfg();
     test_cb();
+    std::cout << LogMgr::Instance()->toYAML() << std::endl;
     return 0;
 }

@@ -57,6 +57,7 @@ class ConfigVar : public ConfigVarBase
 public:
     using ptr = std::shared_ptr<ConfigVar>;
     using cb = std::function<void(const T& old_val, const T& new_val)>;
+    using LockType = RWMutex;
     ConfigVar(const std::string& name, 
                 const T& default_val, 
                 const std::string description = "")
@@ -64,6 +65,7 @@ public:
 
     std::string toString() override {
         try {
+            RWMutex::ReadLock lock(m_mutex);
             return Cast2Str()(m_val);
         } catch(std::exception &e) {
             LOG_ERROR() << "ConfigVar::toString exception"
@@ -75,7 +77,7 @@ public:
 
     bool fromString(const std::string &val) override {
         try {
-            // 触发回调
+            // 触发回调, setVal已加锁，不需要重复添加，不然会死锁
             setVal(Cast2Var()(val));
         } catch (std::exception &e) {
             LOG_ERROR() << "ConfigVar::fromString exception: "
@@ -90,30 +92,42 @@ public:
         return typeid(T).name();
     }
 
-    const T& getVal() const { return m_val; }
+    const T& getVal() { 
+        LockType::ReadLock lock(m_mutex);
+        return m_val; 
+    }
     void setVal(const T& val) { 
-        if (m_val == val) {
-            return;
-        }    
-        for (auto &p : m_cbs) {
-            p.second(m_val, val);
+        {
+            LockType::ReadLock lock(m_mutex);
+            if (m_val == val) {
+                return;
+            }    
+            for (auto &p : m_cbs) {
+                p.second(m_val, val);
+            }
         }
+        LockType::WriteLock lock(m_mutex);
         m_val = val; 
     }
 
     //观察者模式， 监视配置变更
-    void addListener(uint64_t key, cb callback)
+    uint64_t addListener(cb callback)
     {
-        m_cbs[key] = callback;
+        static uint64_t s_key = 0;
+        LockType::WriteLock lock(m_mutex);
+        m_cbs[s_key] = callback;
+        return s_key;
     }
 
     void deleteListener(uint64_t key)
     {
+        LockType::WriteLock lock(m_mutex);
         m_cbs.erase(key);
     }
 
     void clearListener()
     {
+        LockType::WriteLock lock(m_mutex);
         m_cbs.clear();
     }
 
@@ -121,6 +135,7 @@ public:
 private:
     T m_val;
     std::map<uint64_t, cb> m_cbs;
+    LockType m_mutex;
 };
 
 
@@ -129,11 +144,12 @@ class Config
 {
 public:
     using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
-
+    using LockType = RWMutex;
     template<class T>
     static typename ConfigVar<T>::ptr lookup(const std::string &name, 
                                              const T& default_val, const std::string& description = "") 
     {
+        LockType::WriteLock lock(s_mutex());
         auto it = s_datas().find(name);
         if (it != s_datas().end()) {
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
@@ -162,11 +178,13 @@ public:
 
     template<class T>
     static typename ConfigVar<T>::ptr lookup(const std::string &name) {
+        LockType::ReadLock lock(s_mutex());
         auto it = s_datas().find(name);
         return it == s_datas().end() ? nullptr : std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
 
     static ConfigVarBase::ptr lookupBase(const std::string &name) {
+        LockType::ReadLock lock(s_mutex());
         auto it = s_datas().find(name);
         return it == s_datas().end() ? nullptr : it->second;
     }
@@ -178,7 +196,11 @@ public:
         static ConfigVarMap s_datas;
         return s_datas;
     }
-private:
+
+    static LockType &s_mutex() {
+        static LockType s_mutex;
+        return s_mutex;
+    }
 };
 
 
