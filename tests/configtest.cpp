@@ -129,5 +129,10 @@ int main(int argc, char *argv[]) {
     test_cfg();
     test_cb();
     std::cout << LogMgr::Instance()->toYAML() << std::endl;
+    Config::visitAll([](ConfigVarBase::ptr cfg_ptr) {
+        LOG_INFO()  << "name: " << cfg_ptr->getName() 
+                    <<", description: "<< cfg_ptr->getDescription() 
+                    << ", type: " << cfg_ptr->getTypeName();
+    });
     return 0;
 }

@@ -191,6 +191,8 @@ public:
 
     static void loadFromYAML(const YAML::Node &node);
 
+    static void visitAll(std::function<void(ConfigVarBase::ptr)> cb);
+
 //防止静态变量未初始化直接被使用 
     static ConfigVarMap& s_datas() {
         static ConfigVarMap s_datas;

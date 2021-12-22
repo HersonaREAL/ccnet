@@ -56,4 +56,15 @@ void Config::loadFromYAML(const YAML::Node &root)
     }
 }
 
+
+void Config::visitAll(std::function<void(ConfigVarBase::ptr)> cb)
+{
+    LockType::ReadLock lock(s_mutex());
+    const auto &datas = s_datas();
+
+    for (auto it = datas.cbegin(); it != datas.cend(); ++it) {
+        cb(it->second);
+    }
+}
+
 }
