@@ -39,7 +39,7 @@ Fiber::Fiber()
     }
 
     ++s_fiber_count;
-    LOG_DEBUG() << "Fiber::Fiber";
+    // LOG_DEBUG() << "Fiber::Fiber";
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize)
@@ -70,7 +70,7 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
     //setcontext时跳转到MainFunc
     makecontext(&m_ctx, Fiber::MainFunc, 0);
 
-    LOG_DEBUG() << "Fiber::Fiber, id = " << m_id;
+    // LOG_DEBUG() << "Fiber::Fiber, id = " << m_id;
 }
 
 Fiber::~Fiber()
@@ -90,7 +90,7 @@ Fiber::~Fiber()
         }
     }
 
-    LOG_DEBUG() << "~fiber(), id = " << m_id;
+    // LOG_DEBUG() << "~fiber(), id = " << m_id;
 }
 
     // 重置协程, 处于INIT, TERM状态才行

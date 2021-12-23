@@ -80,6 +80,14 @@ public:
     }
 };
 
+class ThreadNameFormatItem : public LogFormatter::FormatItem {
+public:
+    ThreadNameFormatItem (const std::string &fmt = "") {};
+    void format(std::ostream &os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr ev) override {
+        os << ev->getThreadName();
+    }
+};
+
 class FiberIdFormatItem : public LogFormatter::FormatItem {
 public:
     FiberIdFormatItem (const std::string &fmt = "") {};
@@ -249,6 +257,7 @@ void LogFormatter::init()
         def_item(l, LineFormatItem)
         def_item(T, TabFormatItem)
         def_item(F, FiberIdFormatItem)
+        def_item(N, ThreadNameFormatItem)
 #undef def_item
     };
     /* 
@@ -263,6 +272,7 @@ void LogFormatter::init()
     %d 时间
     %f 文件名
     %l 行号
+    %N 线程名 
     */
 
     for (const auto &i : vec) {

@@ -293,7 +293,7 @@ public:
                     LogLevel::ToLevel(n["level"].as<std::string>()) : LogLevel::UNKNOW;
 
         res.formatter = n["formatter"].IsDefined() ? 
-                    n["formatter"].as<std::string>() : "%d%T%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n";
+                    n["formatter"].as<std::string>() : "%d%T%N:%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n";
 
         // cast appenders
         if (n["appenders"].IsDefined()) {

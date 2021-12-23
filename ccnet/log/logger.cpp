@@ -45,9 +45,9 @@ LogLevel::Level LogLevel::ToLevel(const std::string &str)
 }
 
 LogEvent::LogEvent(const char *fileName, int32_t line, uint32_t elapse, 
-				uint32_t threadId, uint32_t fiberId, uint64_t time)
+				uint32_t threadId, uint32_t fiberId, uint64_t time, const std::string& threadName)
         : m_file(fileName), m_line(line), m_elapse(elapse), 
-          m_threadId(threadId), m_fiberId(fiberId), m_time(time)
+          m_threadId(threadId), m_fiberId(fiberId), m_time(time), m_threadName(threadName)
 {
 
 }
@@ -56,7 +56,7 @@ Logger::Logger(const std::string& name, const std::string& fmt)
     : m_name(name), m_level(LogLevel::DEBUG) 
 {
     if (fmt.empty())
-        m_formatter.reset(new LogFormatter("%d%T%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n"));
+        m_formatter.reset(new LogFormatter("%d%T%N:%t%T%F%T[%p]%T[%c]%T<%f:%l>: %m%n"));
     else
         m_formatter.reset(new LogFormatter(fmt));
 }

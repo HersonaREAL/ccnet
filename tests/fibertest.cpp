@@ -13,6 +13,7 @@ void TEST_FIBER()
 
 int main() {
     // Fiber::GetThis();
+    Thread::SetName("main");
     Fiber::ptr fb = std::make_shared<Fiber>(TEST_FIBER);
     fb->swapIn();
     std::cout << "this is shit~" << std::endl;

@@ -20,13 +20,14 @@
 #include <set>
 #include <utils.h>
 #include <lock.h>
+#include <thread.h>
 
 #define CCNET_LOG_LEVEL(logger, level) \
 		if (logger->getLevel() <= level) \
 			ccnet::LogWrap(logger, level,  \
 				std::make_shared<ccnet::LogEvent>(__FILE__, __LINE__,  0, \
 											ccnet::getThreadId(), \
-											ccnet::getFiberId(), time(NULL))).getSs()
+											ccnet::getFiberId(), time(NULL), ccnet::Thread::GetName())).getSs()
 
 #define CCNET_LOG_NAME(name) ccnet::LogMgr::Instance()->getLogger(name)
 
@@ -41,7 +42,7 @@
 			ccnet::LogWrap(logger, level, \
 				std::make_shared<ccnet::LogEvent>(__FILE__, __LINE__, 0, \
 											ccnet::getThreadId(), \
-											ccnet::getFiberId(), time(NULL))).format(fmt,##__VA_ARGS__)
+											ccnet::getFiberId(), time(NULL), ccnet::Thread::GetName())).format(fmt,##__VA_ARGS__)
 
 #define CCNET_LOG_FMT_DEBUG(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::DEBUG, fmt, ##__VA_ARGS__)
 #define CCNET_LOG_FMT_INFO(logger, fmt, ...) CCNET_LOG_FMT_LEVEL(logger, ccnet::LogLevel::INFO, fmt, ##__VA_ARGS__)
@@ -84,12 +85,14 @@ class LogEvent {
 public:
 	using ptr = std::shared_ptr<LogEvent>;
 	LogEvent(const char *fileName, int32_t line, uint32_t elapse, 
-				uint32_t threadId, uint32_t fiberId, uint64_t time);
+				uint32_t threadId, uint32_t fiberId, uint64_t time, 
+				const std::string &threadName);
 
 	const char *getFile() const { return m_file; } 
 	int32_t getLine() const { return m_line; }
 	uint32_t getElapse() const { return m_elapse; }
 	uint32_t getThreadId() const { return m_threadId; }
+	const std::string& getThreadName() const { return m_threadName; }
 	uint32_t getFiberId() const { return m_fiberId; }
 	uint64_t getTime() const { return m_time; }
 	std::string getContent() const { return m_ss.str(); }
@@ -101,6 +104,7 @@ private:
 	uint32_t m_threadId = 0;	  	// thread id
 	uint32_t m_fiberId = 0;	       	// 协程ID
 	uint64_t m_time;			  	//时间戳	
+	std::string m_threadName;		//线程名
 	std::stringstream m_ss;		  
 };
 
