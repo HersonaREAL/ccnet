@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <fiber.h>
 #include <bits/stdint-uintn.h>
 #include <cstdio>
 #include <cstdlib>
@@ -13,8 +14,7 @@ pid_t getThreadId() {
 }
 
 uint32_t getFiberId() {
-    //TODO
-    return 0;
+    return Fiber::GetFiberId();
 }
 
 void getBackTrace(std::vector<std::string> &bt, size_t size, size_t skip )
