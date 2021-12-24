@@ -1,25 +1,44 @@
 #include <iostream>
 #include <ccnet.h>
 #include <memory>
+#include <vector>
 using namespace ccnet;
+
+#define THREAD_NUM 8
+
+void FIBER_ROUTINE()
+{
+    LOG_INFO() << "fiber start! fiber id = " << getFiberId();
+    Fiber::YieldToSuspend();
+    LOG_INFO() << "fiber end! fiber id = " << getFiberId();
+    Fiber::YieldToSuspend();
+}
 
 void TEST_FIBER()
 {
-    LOG_INFO() << "fiber start!";
-    Fiber::YieldToSuspend();
-    LOG_INFO() << "fiber end!";
-    Fiber::YieldToSuspend();
+    Fiber::ptr fb = std::make_shared<Fiber>(FIBER_ROUTINE);
+    fb->swapIn();
+    fb->swapIn();
+    fb->swapIn();
+    LOG_INFO() << "thread end thread id = " << getThreadId();
+}
+
+void test_thread_fiber()
+{
+    std::vector<Thread::ptr> vec;
+    for (size_t i = 0; i < THREAD_NUM; i++) {
+        vec.push_back(std::make_shared<ccnet::Thread>(TEST_FIBER, "t_" + std::to_string(i)));
+    }
+
+    for (size_t i = 0; i < THREAD_NUM; i++) {
+        vec[i]->join();
+    }
 }
 
 int main() {
     // Fiber::GetThis();
     Thread::SetName("main");
-    Fiber::ptr fb = std::make_shared<Fiber>(TEST_FIBER);
-    fb->swapIn();
-    std::cout << "this is shit~" << std::endl;
-    fb->swapIn();
-    std::cout << "stil shit~" << std::endl;
-    fb->swapIn();
+    test_thread_fiber();
     std::cout << "hello fiber~" << std::endl;
     return 0;
 }
