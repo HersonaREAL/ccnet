@@ -5,6 +5,7 @@
 #include <ucontext.h>
 
 #include "fiber.h"
+#include <schedule.h>
 
 namespace ccnet {
 
@@ -110,8 +111,9 @@ void Fiber::reset(std::function<void()> cb)
     makecontext(&m_ctx, Fiber::MainFunc, 0);
     m_state = INIT;
 }
-    // 切换到当前协程
-void Fiber::swapIn()
+
+// 从主协程切换到当前协程
+void Fiber::call()
 {
     SetThis(this);
     CCNET_ASSERT(m_state != RUNNING);
@@ -121,12 +123,33 @@ void Fiber::swapIn()
         CCNET_ASSERT_EX(0, "Fiber::swapIn, swapcontext error");
     }
 }
-    // 切出
-void Fiber::swapOut()
+
+// 切换到主协程
+void Fiber::ret()
 {
     SetThis(t_MainFiber.get());
 
     if (swapcontext(&m_ctx, &t_MainFiber->m_ctx)) {
+        CCNET_ASSERT_EX(0, "Fiber::swapOut, swapcontext error");
+    }
+}
+    // 从调度协程切换到当前协程
+void Fiber::swapIn()
+{
+    SetThis(this);
+    CCNET_ASSERT(m_state != RUNNING);
+    m_state = RUNNING;
+
+    if (swapcontext(&Scheduler::GetScFiber()->m_ctx, &m_ctx)) {
+        CCNET_ASSERT_EX(0, "Fiber::swapIn, swapcontext error");
+    }
+}
+    // 切出到调度协程
+void Fiber::swapOut()
+{
+    SetThis(t_MainFiber.get());
+
+    if (swapcontext(&m_ctx, &Scheduler::GetScFiber()->m_ctx)) {
         CCNET_ASSERT_EX(0, "Fiber::swapOut, swapcontext error");
     }
 }
@@ -173,6 +196,13 @@ void Fiber::YieldToSuspend()
     Fiber::ptr cur = GetThis();
     cur->m_state = SUSPEND;
     cur->swapOut();
+}
+
+void Fiber::Yield()
+{
+    Fiber::ptr cur = GetThis();
+    cur->m_state = SUSPEND;
+    cur->ret();
 }
 
 uint64_t Fiber::TotalFibers()

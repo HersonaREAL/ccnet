@@ -9,17 +9,17 @@ using namespace ccnet;
 void FIBER_ROUTINE()
 {
     LOG_INFO() << "fiber start! fiber id = " << getFiberId();
-    Fiber::YieldToSuspend();
+    Fiber::Yield();
     LOG_INFO() << "fiber end! fiber id = " << getFiberId();
-    Fiber::YieldToSuspend();
+    Fiber::Yield();
 }
 
 void TEST_FIBER()
 {
     Fiber::ptr fb = std::make_shared<Fiber>(FIBER_ROUTINE);
-    fb->swapIn();
-    fb->swapIn();
-    fb->swapIn();
+    fb->call();
+    fb->call();
+    fb->call();
     LOG_INFO() << "thread end thread id = " << getThreadId();
 }
 
