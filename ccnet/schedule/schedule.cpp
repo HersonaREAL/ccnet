@@ -117,7 +117,75 @@ void Scheduler::tickle()
     // 协程调度核心函数
 void Scheduler::run()
 {
+    setThis();
+    if (getThreadId() != m_scThreadId) {
+        t_sc_fiber = Fiber::GetThis().get();
+    }
 
+    Fiber::ptr idle_fb = std::make_shared<Fiber>(std::bind(&Scheduler::onIdle, this));
+    Task task;
+
+    for(;;) {
+        task.reset();
+        bool tickle_me = false;
+        {
+            LockType::Lock lock(m_mutex);
+            auto it = m_tasks.begin();
+            while (it != m_tasks.end()) {
+                // -1代表任意进程可执行
+                if (it->thread_id != -1 && getThreadId() != it->thread_id) {
+                    ++it;
+                    tickle_me = true;
+                    continue;
+                }
+                CCNET_ASSERT(it->fiber || it->callback);
+
+                if (it->fiber && it->fiber->getState() == Fiber::RUNNING) {
+                    ++it;
+                    continue;
+                }
+
+                // 取得任务
+                task = std::move(*it);
+                ++m_activeThreadCnt;
+                m_tasks.erase(it);
+                break;
+            }
+        }
+
+        if (tickle_me) {
+            tickle();
+        }
+
+        if (task.callback) {
+            // cb创建协程
+            task.fiber = std::make_shared<Fiber>(task.callback);
+        } 
+
+        if (task.fiber && !task.fiber->isEnd()) {
+            // 是协程且没结束
+            task.fiber->swapIn();
+            --m_activeThreadCnt;
+
+            if (task.fiber->getState() == Fiber::READY) {
+                addTask(task.fiber);
+            } else if (!task.fiber->isEnd()) {
+                task.fiber->m_state = Fiber::SUSPEND;
+            }
+            continue;
+        } 
+
+        // 取不到task进入空闲状态
+        if (idle_fb->isEnd()) break;
+
+        ++m_idleThreadCnt;
+        idle_fb->swapIn();
+        --m_idleThreadCnt;
+
+        if (!idle_fb->isEnd()) {
+            idle_fb->m_state = Fiber::SUSPEND;
+        }
+    }
 }
 
 bool Scheduler::isStop()

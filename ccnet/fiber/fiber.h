@@ -8,6 +8,8 @@
 
 namespace ccnet {
 
+class Scheduler;
+
 class Fiber : public std::enable_shared_from_this<Fiber>
 {
 public:
@@ -20,7 +22,7 @@ public:
         TERM,
         EXCEPT,
     };
-
+    friend Scheduler;
 public:
     Fiber(std::function<void()> cb, size_t stacksize = 0);
     ~Fiber();

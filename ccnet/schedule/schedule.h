@@ -24,10 +24,19 @@ private:
         std::function<void()> callback;
         pid_t thread_id;
 
+        Task() : thread_id(-1) {}
+
         explicit Task(Fiber::ptr fb, pid_t id)
             : fiber(fb), thread_id(id) {}
         Task(std::function<void()> cb, pid_t id)
             : callback(cb), thread_id(id) {}
+
+        void reset()
+        {
+            fiber = nullptr;
+            callback = nullptr;
+            thread_id = -1;
+        }
     };
 
 public:
