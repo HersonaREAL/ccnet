@@ -40,7 +40,7 @@ Fiber::Fiber()
     }
 
     ++s_fiber_count;
-    // LOG_DEBUG() << "Fiber::Fiber";
+    LOG_DEBUG() << "Fiber::Fiber";
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize)
@@ -68,10 +68,10 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
     m_ctx.uc_link = nullptr;
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
-    //setcontext时跳转到MainFunc
+
     makecontext(&m_ctx, Fiber::MainFunc, 0);
 
-    // LOG_DEBUG() << "Fiber::Fiber, id = " << m_id;
+    LOG_DEBUG() << "Fiber::Fiber, id = " << m_id;
 }
 
 Fiber::~Fiber()
@@ -79,6 +79,7 @@ Fiber::~Fiber()
     --s_fiber_count;
     if (m_stack) {
         CCNET_ASSERT(m_state == TERM || m_state == INIT || m_state == EXCEPT);
+        // LOG_DEBUG() << "~fiber::dealloc, id = " << m_id;
         StackAllocator::Dealloc(m_stack, m_stacksize);
     } else {
         // 主协程？
@@ -91,7 +92,7 @@ Fiber::~Fiber()
         }
     }
 
-    // LOG_DEBUG() << "~fiber(), id = " << m_id;
+    LOG_DEBUG() << "~fiber(), id = " << m_id;
 }
 
     // 重置协程, 处于INIT, TERM状态才行
@@ -147,7 +148,8 @@ void Fiber::swapIn()
     // 切出到调度协程
 void Fiber::swapOut()
 {
-    SetThis(t_MainFiber.get());
+    CCNET_ASSERT(Scheduler::GetScFiber());
+    SetThis(Scheduler::GetScFiber());
 
     if (swapcontext(&m_ctx, &Scheduler::GetScFiber()->m_ctx)) {
         CCNET_ASSERT_EX(0, "Fiber::swapOut, swapcontext error");
@@ -219,6 +221,15 @@ void Fiber::SwapToMainFunc()
     }
 }
 
+void Fiber::SwapToScheduleMainFunc()
+{
+    CCNET_ASSERT(Scheduler::GetScFiber());
+    SetThis(Scheduler::GetScFiber());
+    if (setcontext(&Scheduler::GetScFiber()->m_ctx)) {
+        CCNET_ASSERT_EX(0, "Fiber::SwapToScheduleMainFunc, swapcontext error");
+    }
+}
+
 void Fiber::MainFunc()
 {
     Fiber::ptr cur = GetThis();
@@ -238,6 +249,15 @@ void Fiber::MainFunc()
     }
 
     //swap出去后栈中还有只能指针,需要释放智能指针引用
+    // use caller线程需回到sc fiber里
+    if (Scheduler::GetThis() 
+        && Scheduler::GetThis()->m_scThreadId == getThreadId()
+        && Scheduler::GetThis()->m_scFiber.get() != cur.get())
+    {
+        cur.reset();
+        SwapToScheduleMainFunc();
+    } 
+
     cur.reset();
     SwapToMainFunc();
 

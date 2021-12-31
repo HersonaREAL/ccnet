@@ -6,6 +6,10 @@ using namespace ccnet;
 
 #define THREAD_NUM 8
 
+void tiny_test() {
+    std::cout << "shit test\n";
+}
+
 void FIBER_ROUTINE()
 {
     LOG_INFO() << "fiber start! fiber id = " << getFiberId();

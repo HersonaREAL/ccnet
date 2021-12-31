@@ -16,6 +16,7 @@ class Scheduler
 public:
     using ptr = std::shared_ptr<Scheduler>;
     using LockType = Mutex;
+    friend class Fiber;
 private:
     struct Task
     {
@@ -85,6 +86,9 @@ public:
         }
     }
 
+private:
+    pid_t getScThreadId() const { return m_scThreadId; }
+    Fiber* getScFiberRaw() const { return m_scFiber.get(); }
 protected:
     // 通知调度协程有任务
     virtual void tickle();
@@ -103,7 +107,6 @@ protected:
     // 是否拥有空闲线程
     bool hasIdleThreads() { return m_idleThreadCnt > 0; }
 
-private:
 
     // 非阻塞添加任务
     template<typename ExecType>

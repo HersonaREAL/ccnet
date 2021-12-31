@@ -61,7 +61,9 @@ public:
     static uint64_t TotalFibers();
 
     static void MainFunc();
+    static void MainFuncForSchedule();
     static void SwapToMainFunc();
+    static void SwapToScheduleMainFunc();
 private:
     Fiber();
 

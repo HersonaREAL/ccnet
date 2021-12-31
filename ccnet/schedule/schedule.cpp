@@ -59,7 +59,7 @@ void Scheduler::start()
     LockType::Lock lock(m_mutex);
     if (!m_stopping)
         return;
-    m_stopping = true;
+    m_stopping = false;
 
     CCNET_ASSERT(m_threads.empty());
     m_threads.resize(m_threadCnt);
@@ -72,6 +72,7 @@ void Scheduler::start()
 
 void Scheduler::stop()
 {
+    LOG_DEBUG() << "Scheduler stop tid = " << getThreadId();
     m_autoStop = true;
     // use caller 并且只有一个线程
     if (m_scFiber && m_threadCnt == 0
@@ -103,6 +104,7 @@ void Scheduler::stop()
         thr.swap(m_threads);
     }
 
+    LOG_DEBUG() << "stop::Join tid = " << getThreadId();
     for (auto &ptr : thr)
         ptr->join();
 
@@ -111,14 +113,16 @@ void Scheduler::stop()
     // 通知调度协程有任务
 void Scheduler::tickle()
 {
-
+    // LOG_DEBUG() << "tickle! Tid = " << getThreadId() << " Fid = " << getFiberId();
 }
 
     // 协程调度核心函数
 void Scheduler::run()
 {
+    LOG_DEBUG() << "run, Tid = " << getThreadId();
     setThis();
     if (getThreadId() != m_scThreadId) {
+        //后面虽然是调swapIn, 其实跟调用call没区别,都是跟MainFiber交换
         t_sc_fiber = Fiber::GetThis().get();
     }
 
@@ -197,6 +201,7 @@ bool Scheduler::isStop()
     // 空闲时执行idle协程
 void Scheduler::onIdle()
 {
+    LOG_DEBUG() << "onIdle, Fid = " << getFiberId();
     while(!isStop()) {
         Fiber::YieldToSuspend();
     }
