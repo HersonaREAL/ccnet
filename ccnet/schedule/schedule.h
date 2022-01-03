@@ -55,6 +55,8 @@ public:
 
     bool isStop();
 
+    bool hasIdleThread() const { return m_idleThreadCnt > 0; }
+
 
     // 添加任务，可以是函数，也可以是协程指针
     template<typename ExecType>
@@ -105,7 +107,9 @@ protected:
     void setThis();
 
     // 是否拥有空闲线程
-    bool hasIdleThreads() { return m_idleThreadCnt > 0; }
+    bool hasIdleThreads() const { return m_idleThreadCnt > 0; }
+
+    const std::string& getName() const { return m_name; }
 
 
     // 非阻塞添加任务

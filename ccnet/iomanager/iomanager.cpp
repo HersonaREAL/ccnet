@@ -1,4 +1,9 @@
+#include <cerrno>
+#include <cstddef>
+#include <cstdio>
 #include <cstring>
+#include <memory>
+#include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -55,6 +60,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     } else {
         rlock.unlock();
         //扩容
+        LockType::WriteLock wlock(m_mutex);
         resizeCtxs(fd * 1.5);
         fd_ctx = m_fdCtxs[fd];
     }
@@ -66,15 +72,15 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
         fd, event, fd_ctx->events);
     
     //操作epoll
-    int op = fd_ctx->events ? EPOLL_CTL_ADD : EPOLL_CTL_ADD;
+    int op = fd_ctx->events ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
     epoll_event ev;
     memset(&ev, 0, sizeof(ev));
     ev.events = EPOLLET | fd_ctx->events | event;
     ev.data.ptr = fd_ctx;
     int ret = epoll_ctl(m_epfd, op, fd, &ev);
     if (ret) { 
-        LOG_FMT_ERROR("addevnet: epoll_ctl error, epfd=%d, fd=%d, event=0x%x",
-                m_epfd, fd_ctx->fd, ev.events);
+        LOG_FMT_ERROR("addevnet: epoll_ctl error, epfd=%d, fd=%d, event=0x%x, errno=%s",
+                m_epfd, fd_ctx->fd, ev.events, std::strerror(errno));
         return -1;
     }
 
@@ -135,6 +141,7 @@ bool IOManager::delEvent(int fd, Event event)
 
 bool IOManager::cancelEvent(int fd, Event event)
 {
+    LOG_DEBUG() << "call cancelEvent(" << fd << ", " << event <<")";
     LockType::ReadLock rlock(m_mutex);
     if (m_fdCtxs.size() <= (size_t)fd) {
         return false;
@@ -142,7 +149,6 @@ bool IOManager::cancelEvent(int fd, Event event)
 
     FdContext* fd_ctx = m_fdCtxs[fd];
     rlock.unlock();
-
     FdContext::LockType::Lock fdlock(fd_ctx->mutex);
     if (!(fd_ctx->events & event)) {
         return false;
@@ -161,6 +167,7 @@ bool IOManager::cancelEvent(int fd, Event event)
     }
 
     // 触发取消的事件，不从上下文中删除
+    // LOG_DEBUG() << "cancel event, before trigger";
     fd_ctx->triggerEvent(event);
     --m_pendingEvCnt;
     return true;
@@ -210,17 +217,95 @@ IOManager* IOManager::GetThis()
 void IOManager::tickle() 
 {
     // TODO
+    LOG_DEBUG() << "iomanager::tickle!";
+    if (!hasIdleThreads()) {
+        return;
+    }
+
+    int ret = write(m_tickleFds[1], "?", 1);
+    CCNET_ASSERT(ret == 1);
 }
 
 bool IOManager::stopping() 
 {
     // TODO
-    return false;
+    return Scheduler::stopping() && m_pendingEvCnt == 0;
 }
 
 void IOManager::onIdle() 
 {
     // TODO
+    epoll_event *evs = new epoll_event[64];
+    std::shared_ptr<epoll_event> evs_ptr(evs, [](epoll_event *ptr) {
+        delete[] ptr;
+    });
+
+    while (true) {
+        int ret = 0;
+        if (stopping()) {
+            LOG_INFO() << "name = " << getName() <<"idle stop exit";
+            break;
+        }
+
+        do {
+            static const int MAX_TIMEOUT = 5000;
+            LOG_DEBUG() << "enter epoll_wait!";
+            ret = epoll_wait(m_epfd, evs, 64, MAX_TIMEOUT);
+            LOG_DEBUG() << "exit on epoll_wait!";
+            if (ret >= 0 || errno != EINTR) break;
+        }while(true);
+
+        for (int i = 0; i < ret; i++) {
+            epoll_event& ev = evs[i];
+            if (ev.data.fd == m_tickleFds[0]) {
+                uint8_t dummy[256];
+                while(read(m_tickleFds[0], &dummy, sizeof(dummy)) == 1);
+                // read(m_tickleFds[0], &dummy, 1);
+                continue;
+            }
+
+            FdContext* fd_ctx 
+                = static_cast<FdContext*>(ev.data.ptr);
+            
+            FdContext::LockType::Lock lock(fd_ctx->mutex);
+            if (ev.events & (EPOLLERR | EPOLLHUP)) {
+                ev.events |= EPOLLIN | EPOLLOUT;
+            }
+
+            uint32_t ev_real = NONE;
+            if (ev.events & EPOLLIN) {
+                ev_real |= READ;
+            }
+            if (ev.events & EPOLLOUT) {
+                ev_real |= WRITE;
+            }
+
+            if (!(fd_ctx->events & ev_real)) {
+                continue;
+            }
+
+            uint32_t ev_left = fd_ctx->events & (~ev_real);
+            int op = ev_left ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+            ev.events = EPOLLET | ev_left;
+
+            int ret2 = epoll_ctl(m_epfd, op, fd_ctx->fd, &ev);
+            if (ret2) {
+                //TODO LOG
+                continue;
+            }
+
+            if (ev_real & READ) {
+                fd_ctx->triggerEvent(READ);
+                --m_pendingEvCnt;
+            }
+
+            if (ev_real & WRITE) {
+                fd_ctx->triggerEvent(WRITE);
+                --m_pendingEvCnt;
+            }
+        }
+        Fiber::YieldToSuspend();
+    }
 }
 
 void IOManager::resizeCtxs (size_t size)
@@ -259,7 +344,7 @@ void IOManager::FdContext::triggerEvent(Event ev)
     CCNET_ASSERT(events & ev);
     events = (Event)(events & ~ev);
     auto &ev_ctx = getEvContext(ev);
-
+    CCNET_ASSERT(ev_ctx.scheduler);
     if (ev_ctx.callback) {
         ev_ctx.scheduler->addTask(ev_ctx.callback);
     } else {

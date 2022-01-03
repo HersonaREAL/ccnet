@@ -180,7 +180,9 @@ void Scheduler::run()
         } 
 
         // 取不到task进入空闲状态
-        if (idle_fb->isEnd()) break;
+        if (idle_fb->isEnd()) { 
+            break;
+        }
 
         ++m_idleThreadCnt;
         idle_fb->swapIn();
