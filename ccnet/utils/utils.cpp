@@ -3,6 +3,9 @@
 #include <bits/stdint-uintn.h>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <execinfo.h>
 #include <assert.h>
 #include <sstream>
@@ -48,4 +51,17 @@ std::string backTraceToString(size_t size, size_t skip , const std::string &pref
     return ss.str();
 }
 
+uint64_t getCurrentMS()
+{
+    timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_sec * 1000UL + (tv.tv_usec / 1000UL);
+}
+
+uint64_t getCurrentUS()
+{
+    timeval tv;
+    gettimeofday(&tv, nullptr);
+    return tv.tv_sec * 1000000UL + tv.tv_usec;
+}
 }

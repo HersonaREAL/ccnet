@@ -54,6 +54,11 @@ void getBackTrace(std::vector<std::string> &bt, size_t size, size_t skip = 1);
 
 std::string backTraceToString(size_t size, size_t skip = 2, const std::string &prefix = "");
 
+uint64_t getCurrentMS();
+
+uint64_t getCurrentUS();
+
+
 #define CCNET_ASSERT(expr) \
     do {\
         if (expr) break;\
